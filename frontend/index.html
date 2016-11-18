@@ -3,67 +3,29 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 	<title>Semi Virtual Etch-a-Sketch</title>
+    <script type="text/javascript" src="../libs/three.js"></script>
 
+    <script type="text/javascript" src="../libs/stats.js"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="scripts.js"></script>
 
 	<style type="text/css">
 
-		canvas {
-			background : url(images/back.jpg);
-			float      : left;
-		}
-
-		#top {
-			width      : 523px;
-			height     : 128px;
-			background : url(images/top.jpg);
-		}
-
-		#bottom {
-			width      : 523px;
-			height     : 188px;
-			background : url(images/bottom.jpg);
-			clear      : both;
-		}
-
-		#middle_wrapper {
-			float : left;
-		}
-
-		#left {
-			width      : 116px;
-			height     : 662px;
-			background : url(images/left.jpg);
-			float      : left;
-		}
-
-		#right {
-			width      : 125px;
-			height     : 662px;
-			background : url(images/right.jpg);
-			float      : left;
-		}
-
-		#wrapper {
-			width  : 764px;
-			margin : 0 auto;
-		}
-
+		body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
 	</style>
 
 </head>
 <body>
 
-<div id="wrapper">
-	<div id="left"></div>
-	<div id="middle_wrapper">
-		<div id="top"></div>
-		<canvas id="sketch" width="523" height="346"></canvas>
-		<div id="bottom"></div>
-	</div>
-	<div id="right"></div>
+ <div id="Stats-output">
+</div>
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
 </div>
 </body>
 </html>
