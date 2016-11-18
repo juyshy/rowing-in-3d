@@ -3,7 +3,7 @@ var serial = require( "serialport" );
 var SerialPort = serial.SerialPort;
 
 // Replace with the device name in your machine.
-var portName = "/dev/cu.usbmodem1421";
+var portName = "COM3"; // /dev/cu.usbmodem1421
 
 var sp = new SerialPort( portName, {
 	baudrate:9600,
