@@ -2,7 +2,9 @@
 
     
 jQuery( document ).ready( function () {
- 
+
+// three.js code adapted from here: https://github.com/josdirksen/learning-threejs/blob/master/chapter-01/04-materials-light-animation.html
+
         var stats = initStats();
 
         // create a scene, that will hold all our elements such as objects, cameras and lights.
