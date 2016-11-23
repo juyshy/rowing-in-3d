@@ -1,4 +1,4 @@
-semi-virtual-etch-a-sketch
+Rowing webgl pots
 ==========================
 
 1. Clone the repo

@@ -1,2 +1,8 @@
 .idea
 node_modules/
+learning-threejs/
+three.js/
+libs/
+kamaa/
+build/
+frontend/js/
