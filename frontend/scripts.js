@@ -4,16 +4,16 @@
 jQuery(document).ready(function () {
     function initStats() {
 
-            var stats = new Stats();
-            stats.setMode(0); // 0: fps, 1: ms
-            // Align top-left
-            stats.domElement.style.position = 'absolute';
-            stats.domElement.style.left = '0px';
-            stats.domElement.style.top = '0px';
-            document.getElementById("Stats-output").appendChild(stats.domElement);
+        var stats = new Stats();
+        stats.setMode(0); // 0: fps, 1: ms
+        // Align top-left
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.left = '0px';
+        stats.domElement.style.top = '0px';
+        document.getElementById("Stats-output").appendChild(stats.domElement);
 
-            return stats;
-        }
+        return stats;
+    }
 
     var stats = initStats();
     var container, stats;
@@ -181,12 +181,87 @@ jQuery(document).ready(function () {
         stats.update();
         camera.position.x += (mouseX - camera.position.x) * .05;
         //camera.position.y += 10 + ( - mouseY - camera.position.y ) * .05;
-        oar_pivot_right.rotation.y = mouseY / 100 * Math.PI;
-        oar_pivot_left.rotation.y = -mouseY / 100 * Math.PI;
+        oar_pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
+        oar_pivot_left.rotation.y = $lastL ; //-mouseY / 100 * Math.PI;
         camera.lookAt(scene.position);
 
         renderer.render(scene, camera);
 
     }
+    var $lastR = -1;
+    var $lastL = -1;
+
+    var socket = io.connect("/", {
+        "reconnect": true,
+        "reconnection delay": 500,
+        "max reconnection attempts": 10
+    });
+
+
+
+    socket.on("message", function (data) {
+
+        data = process_data(data);
+
+        /* Initial position */
+        if ($lastR == -1) {
+            $lastR = data.x;
+            $lastL = data.y;
+        }
+
+        $lastR = data.r;
+        //console.log($lastR);
+        $lastL = data.l;
+        //renderScene();
+
+    });
+
+
+    function process_data(data) {
+
+        var ret = {
+            r: 0,
+            l: 0
+        };
+
+        var array = data.split(',');
+
+        if (array.length < 2)
+            return ret;
+        ret.r = array[0];
+        ret.l = array[1];
+        ret = sanitize_size(ret);
+
+        return ret;
+    }
+
+    /* Convert pot values to row oar degrees. */
+    function sanitize_size(values) {
+        var ret = {
+            r: 0,
+            l: 0
+        };
+        var max_potR = 752;
+        var max_potL = 676;
+        var min_potR = 145;
+        var min_potL = 82;
+        var max_rota_R = 50;
+        var max_rota_L = 50;
+        var min_rota_R = -50;
+        var min_rota_L = -50;
+        var maxPot_R_delta = max_potR - min_potR;
+        var maxPot_L_delta = max_potL - min_potL;
+        var max_rota_R_delta = max_rota_R - min_rota_R;
+        var max_rota_L_delta = max_rota_L - min_rota_L;
+        var pot2rotR_ratio = max_rota_R_delta / maxPot_R_delta;
+        var pot2rotL_ratio = max_rota_L_delta / maxPot_L_delta;
+        degreeR = ((values.r - min_potR) * pot2rotR_ratio + min_rota_R);
+        degreeL = (values.l - min_potL) * pot2rotL_ratio + min_rota_L;
+        ret.r = -degreeR * 0.0174533;
+        ret.l = degreeL * 0.0174533;
+        //console.log(values.r, (values.r - min_potR), degreeR, ret.r);
+        return ret;
+    }
+
 }
 );
