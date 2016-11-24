@@ -14,6 +14,7 @@ jQuery(document).ready(function () {
     var windowHalfY = window.innerHeight / 2;
 
     var oar_pivot_right = new THREE.Object3D();
+    var oar_pivot_left = new THREE.Object3D();
     init();
     animate();
 
@@ -45,6 +46,7 @@ jQuery(document).ready(function () {
         scene.add(pivot);
 
         pivot.add(oar_pivot_right);
+        pivot.add(oar_pivot_left);
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -87,18 +89,37 @@ jQuery(document).ready(function () {
             objLoader.setMaterials(materials);
             objLoader.setPath('3d/');
             objLoader.load('oar4.obj', function (object2) {
+
                 object2.position.z = -13.5;
                 object2.position.x = -22.7;
+                //console.dir(object2);
                 oar_pivot_right.add(object2);
-
 
             }, onProgress, onError);
 
         });
+        mtlLoader = new THREE.MTLLoader();
+        mtlLoader.setPath('3d/');
+        mtlLoader.load('oarleft.mtl', function (materials) {
 
+            materials.preload();
+
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials(materials);
+            objLoader.setPath('3d/');
+            objLoader.load('oarleft.obj', function (object2) {
+
+                object2.position.z = -13.5;
+                object2.position.x = 22.7;
+                oar_pivot_left.add(object2);
+
+            }, onProgress, onError);
+
+        });
         oar_pivot_right.position.z = 13.5;
         oar_pivot_right.position.x = 22.7;
-
+        oar_pivot_left.position.z = 13.5;
+        oar_pivot_left.position.x = -22.7;
 
         //
 
@@ -133,7 +154,6 @@ jQuery(document).ready(function () {
 
         mouseX = (event.clientX - windowHalfX) / 8;
         mouseY = (event.clientY - windowHalfY) / 8;
-
     }
 
     //
@@ -150,6 +170,7 @@ jQuery(document).ready(function () {
         camera.position.x += (mouseX - camera.position.x) * .05;
         //camera.position.y += 10 + ( - mouseY - camera.position.y ) * .05;
         oar_pivot_right.rotation.y = mouseY / 100 * Math.PI;
+        oar_pivot_left.rotation.y = -mouseY / 100 * Math.PI;
         camera.lookAt(scene.position);
 
         renderer.render(scene, camera);
