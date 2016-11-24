@@ -2,8 +2,20 @@
 
 
 jQuery(document).ready(function () {
+    function initStats() {
 
+            var stats = new Stats();
+            stats.setMode(0); // 0: fps, 1: ms
+            // Align top-left
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+            document.getElementById("Stats-output").appendChild(stats.domElement);
 
+            return stats;
+        }
+
+    var stats = initStats();
     var container, stats;
 
     var camera, scene, renderer;
@@ -166,7 +178,7 @@ jQuery(document).ready(function () {
     }
 
     function render() {
-
+        stats.update();
         camera.position.x += (mouseX - camera.position.x) * .05;
         //camera.position.y += 10 + ( - mouseY - camera.position.y ) * .05;
         oar_pivot_right.rotation.y = mouseY / 100 * Math.PI;
