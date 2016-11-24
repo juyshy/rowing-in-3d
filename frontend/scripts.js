@@ -13,7 +13,7 @@ jQuery(document).ready(function () {
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
 
-    var oar_pivot = new THREE.Object3D();
+    var oar_pivot_right = new THREE.Object3D();
     init();
     animate();
 
@@ -44,7 +44,7 @@ jQuery(document).ready(function () {
         var pivot = new THREE.Object3D();
         scene.add(pivot);
 
-        pivot.add(oar_pivot);
+        pivot.add(oar_pivot_right);
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -89,15 +89,15 @@ jQuery(document).ready(function () {
             objLoader.load('oar4.obj', function (object2) {
                 object2.position.z = -13.5;
                 object2.position.x = -22.7;
-                oar_pivot.add(object2);
+                oar_pivot_right.add(object2);
 
 
             }, onProgress, onError);
 
         });
 
-        oar_pivot.position.z = 13.5;
-        oar_pivot.position.x = 22.7;
+        oar_pivot_right.position.z = 13.5;
+        oar_pivot_right.position.x = 22.7;
 
 
         //
@@ -149,7 +149,7 @@ jQuery(document).ready(function () {
 
         camera.position.x += (mouseX - camera.position.x) * .05;
         //camera.position.y += 10 + ( - mouseY - camera.position.y ) * .05;
-        oar_pivot.rotation.y = mouseY / 100 * Math.PI;
+        oar_pivot_right.rotation.y = mouseY / 100 * Math.PI;
         camera.lookAt(scene.position);
 
         renderer.render(scene, camera);
