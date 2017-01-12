@@ -16,7 +16,9 @@ jQuery(document).ready(function () {
     var speed=0;
     var frameCount = 0;
     var randomFreq= 230;
-    var randomViewPos = {x:0, y:20};
+    var randomViewPos = {x:0, y:10};
+
+    var skyboxmesh;
 
     function initStats() {
 
@@ -45,8 +47,65 @@ jQuery(document).ready(function () {
     var oar_pivot_left = new THREE.Object3D();
     init();
     animate();
+        
+    function loadTexture( path ) {
 
+                    var texture = new THREE.Texture( texture_placeholder );
+                    var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: true } );
 
+                    var image = new Image();
+                    image.onload = function () {
+
+                        texture.needsUpdate = true;
+                        material.map.image = this;
+
+                        //render();
+
+                    };
+                    image.src = path;
+
+                    return material;
+
+        }
+
+        function setSkyBox() {
+	
+			texture_placeholder = document.createElement( 'canvas' );
+				texture_placeholder.width = 128;
+				texture_placeholder.height = 128;
+
+				var context = texture_placeholder.getContext( '2d' );
+				context.fillStyle = 'rgb( 200, 200, 200 )';
+				context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
+		
+// 		var folder = "textures/";
+		
+		var folder = "skyboxtex/"; // "netsuns/"; // //"koivuk_skybox/";
+		
+		var materials = [
+
+/* 					loadTexture( folder + 'px.jpg' ), // right
+					loadTexture( folder + 'nx.jpg' ), // left
+					loadTexture( folder + 'py.jpg' ), // top
+					loadTexture( folder + 'ny.jpg' ), // bottom
+					loadTexture( folder + 'pz.jpg' ), // back
+					loadTexture( folder + 'nz.jpg' )  // front */
+					
+					loadTexture( folder + 'posx.jpg' ), // right
+					loadTexture( folder + 'negx.jpg' ), // left
+					loadTexture( folder + 'posy.jpg' ), // top
+					loadTexture( folder + 'negy.jpg' ), // bottom
+					loadTexture( folder + 'posz.jpg' ), // back
+					loadTexture( folder + 'negz.jpg' )  // front
+				];
+
+				skyboxmesh = new THREE.Mesh( new THREE.CubeGeometry( 1300, 1300, 1300, 7, 7, 7 ), new THREE.MeshFaceMaterial( materials ) );
+				skyboxmesh.scale.x = - 1;
+				skyboxmesh.position.y = 75;
+                skyboxmesh.rotation.y = -Math.PI * 0.5;
+				scene.add( skyboxmesh );
+
+	}
 
     function init() {
 
@@ -84,6 +143,7 @@ jQuery(document).ready(function () {
         }
         // model
        
+        setSkyBox() ;
         scene.add(pivot);
 
         pivot.add(oar_pivot_right);
@@ -164,6 +224,9 @@ jQuery(document).ready(function () {
 
         //
 
+
+
+
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -213,7 +276,7 @@ jQuery(document).ready(function () {
 
         if (frameCount % randomFreq == 0){
             randomViewPos.x= Math.random() * 300 - 150;
-            randomViewPos.y= Math.random() * 250 +10;
+            randomViewPos.y= Math.random() * 150 +1;
             //console.log(randomViewPos);
         }
 
@@ -265,8 +328,14 @@ jQuery(document).ready(function () {
 
         pivot.position.z -=   speed;
         camera.position.z = pivot.position.z +200;
-        camera.lookAt(pivot.position);
-
+        skyboxmesh.position.x = camera.position.x;
+	    skyboxmesh.position.z = camera.position.z;
+        var lookatPos = {x:0,y:0,z:0}; 
+        lookatPos.x = pivot.position.x;
+        lookatPos.y = pivot.position.y + 5;
+        lookatPos.z = pivot.position.z;
+        camera.lookAt(lookatPos);
+       
         renderer.render(scene, camera);
 
     }
