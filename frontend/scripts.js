@@ -2,6 +2,22 @@
 
 
 jQuery(document).ready(function () {
+    var $lastR = -1;
+    var $lastL = -1;
+    var $lastLup = 0;
+    var $lastRup = 0;
+    var $lastSpeed = 0;
+    var $lastRowValR = -1; 
+    var  $lastRowValL = -1; 
+    var maxim = 0;
+    var previousAngle = 0;
+    var dirFlag= false;
+    var dirArray=[];
+    var speed=0;
+    var frameCount = 0;
+    var randomFreq= 230;
+    var randomViewPos = {x:0, y:20};
+
     function initStats() {
 
         var stats = new Stats();
@@ -24,7 +40,7 @@ jQuery(document).ready(function () {
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
-
+    var pivot = new THREE.Object3D();
     var oar_pivot_right = new THREE.Object3D();
     var oar_pivot_left = new THREE.Object3D();
     init();
@@ -39,8 +55,8 @@ jQuery(document).ready(function () {
 
         camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
         camera.position.x = 0;
-        camera.position.y = 120;
-        camera.position.z = 120;
+        camera.position.y = 420;
+        camera.position.z = 420;
 
         // scene
 
@@ -53,8 +69,21 @@ jQuery(document).ready(function () {
         directionalLight.position.set(0, 5, 1).normalize();
         scene.add(directionalLight);
 
+		var mapUrl = "texture/sea2.jpg";
+        var map = THREE.ImageUtils.loadTexture(mapUrl);
+        var material = new THREE.MeshPhongMaterial({ map: map });
+        var tilesize= 900;
+        var geometry = new THREE.PlaneGeometry( tilesize, tilesize);
+
+        for (var planeCount = 0;planeCount < 15; planeCount++ ){
+            var plane = new THREE.Mesh(geometry, material);
+            plane.position.y = -4;
+            plane.rotation.x = - Math.PI / 2;
+            plane.position.z = -planeCount*tilesize;
+            scene.add(  plane );
+        }
         // model
-        var pivot = new THREE.Object3D();
+       
         scene.add(pivot);
 
         pivot.add(oar_pivot_right);
@@ -177,19 +206,70 @@ jQuery(document).ready(function () {
 
     }
 
+
     function render() {
         stats.update();
-        camera.position.x += (mouseX - camera.position.x) * .05;
-        //camera.position.y += 10 + ( - mouseY - camera.position.y ) * .05;
+        frameCount++;
+
+        if (frameCount % randomFreq == 0){
+            randomViewPos.x= Math.random() * 300 - 150;
+            randomViewPos.y= Math.random() * 250 +10;
+            //console.log(randomViewPos);
+        }
+
+
+        //camera.position.x += (mouseX*2 - camera.position.x) * .05;
+        //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
+        camera.position.x += (randomViewPos.x - camera.position.x) * .005;
+        camera.position.y +=   (  randomViewPos.y - camera.position.y ) * .005;
         oar_pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.y = $lastL ; //-mouseY / 100 * Math.PI;
-        camera.lookAt(scene.position);
+
+
+               
+         
+        dirArray.push($lastRowValR);
+        if (dirArray.length > 10){
+            dirArray.shift();
+        }
+        var diffSum = 0;
+        for(var indx = 0; indx < dirArray.length-1; indx++){
+            diffSum += dirArray[indx+1] -dirArray[indx];
+        } 
+        //console.log(diffSum);
+        if (diffSum > 0  ) {
+            dirFlag = true;
+            //console.log("eteenp");
+        } else {
+            dirFlag = false;
+        }
+        //console.log(dirArray);
+        //previousAngle =values.r;
+        
+        if(dirFlag) {
+             
+              $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
+              $lastLup = 0.2;
+              speed += (diffSum*0.02 - speed) * .01; //= 0.08; //
+        }
+
+           
+        else {
+            $lastRup = 0;
+           $lastLup = 0 ;
+            speed += (0 - speed) * .005; //= 0.01;//
+        }
+        
+        oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
+        oar_pivot_left.rotation.z = $lastLup ; //-mouseY / 100 * Math.PI;
+
+        pivot.position.z -=   speed;
+        camera.position.z = pivot.position.z +200;
+        camera.lookAt(pivot.position);
 
         renderer.render(scene, camera);
 
     }
-    var $lastR = -1;
-    var $lastL = -1;
 
     var socket = io.connect("/", {
         "reconnect": true,
@@ -207,11 +287,18 @@ jQuery(document).ready(function () {
         if ($lastR == -1) {
             $lastR = data.x;
             $lastL = data.y;
+
         }
 
         $lastR = data.r;
         //console.log($lastR);
         $lastL = data.l;
+        $lastRup = data.upR;
+        $lastLup = data.upL;
+        $lastRowValR =  data.rawValR;
+        $lastRowValL =  data.rawValL;
+        //$lastSpeed = data.speed;
+        //console.log($lastSpeed);
         //renderScene();
 
     });
@@ -231,15 +318,21 @@ jQuery(document).ready(function () {
         ret.r = array[0];
         ret.l = array[1];
         ret = sanitize_size(ret);
-
+        //console.log(ret);
         return ret;
     }
+
 
     /* Convert pot values to row oar degrees. */
     function sanitize_size(values) {
         var ret = {
             r: 0,
-            l: 0
+            l: 0,
+            upR:0,
+            upL: 0,
+            speed: 0,
+            rawValR:0,
+            rawValL:0,
         };
         var max_potR = 752;
         var max_potL = 676;
@@ -257,9 +350,20 @@ jQuery(document).ready(function () {
         var pot2rotL_ratio = max_rota_L_delta / maxPot_L_delta;
         degreeR = ((values.r - min_potR) * pot2rotR_ratio + min_rota_R);
         degreeL = (values.l - min_potL) * pot2rotL_ratio + min_rota_L;
+        ret.rawValR = values.r;
+        ret.rawValR = values.l;
         ret.r = -degreeR * 0.0174533;
         ret.l = degreeL * 0.0174533;
+        /*
+        if(maxim < ret.l){
+            maxim = ret.l;
+            //console.log(ret.l);
+        }*/
+
+    
+        //ret.upL = ( 0.872 - Math.abs(0- ret.l)) * 0.3;
         //console.log(values.r, (values.r - min_potR), degreeR, ret.r);
+       // console.log(ret);
         return ret;
     }
 
