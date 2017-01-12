@@ -131,7 +131,7 @@ jQuery(document).ready(function () {
 		var mapUrl = "texture/sea2.jpg";
         var map = THREE.ImageUtils.loadTexture(mapUrl);
         var material = new THREE.MeshPhongMaterial({ map: map });
-        var tilesize= 900;
+        var tilesize= 1300;
         var geometry = new THREE.PlaneGeometry( tilesize, tilesize);
 
         for (var planeCount = 0;planeCount < 15; planeCount++ ){
@@ -139,6 +139,7 @@ jQuery(document).ready(function () {
             plane.position.y = -4;
             plane.rotation.x = - Math.PI / 2;
             plane.position.z = -planeCount*tilesize;
+            
             scene.add(  plane );
         }
         // model
@@ -226,6 +227,7 @@ jQuery(document).ready(function () {
 
 
 
+        scene.fog = new THREE.Fog(0xc3a8c5, 300, 640);//9c7b99
 
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
