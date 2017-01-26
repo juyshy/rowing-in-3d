@@ -7,3 +7,6 @@ Rowing webgl pots
 4. ´npm install´ to get the needed modules
 5. ´node etch.js´
 6. Go to http://localhost:9000/ on your browser and row
+
+
+![Screenshot](2017-01-26_22-01-32.png)
