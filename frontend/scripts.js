@@ -1,22 +1,28 @@
 
 
 
+/*jslint browser: true*/
+/*global   jQuery, alert, Stats, THREE,io*/
+
 jQuery(document).ready(function () {
     var $lastR = -1;
     var $lastL = -1;
     var $lastLup = 0;
     var $lastRup = 0;
-    var $lastSpeed = 0;
+    var degreeL, degreeR;
+    //var $lastSpeed = 0;
     var $lastRowValR = -1;
     var $lastRowValL = -1;
-    var maxim = 0;
-    var previousAngle = 0;
+    //var maxim = 0;
+    //var previousAngle = 0;
     var dirFlag = false;
     var dirArray = [];
     var speed = 0;
     var frameCount = 0;
     var randomFreq = 230;
     var randomViewPos = { x: 0, y: 10 };
+    var texture_placeholder;
+    var mouseX, mouseY;
 
     var skyboxmesh;
 
@@ -25,20 +31,20 @@ jQuery(document).ready(function () {
         var stats = new Stats();
         stats.setMode(0); // 0: fps, 1: ms
         // Align top-left
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.left = '0px';
-        stats.domElement.style.top = '0px';
+        stats.domElement.style.position = "absolute";
+        stats.domElement.style.left = "0px";
+        stats.domElement.style.top = "0px";
         document.getElementById("Stats-output").appendChild(stats.domElement);
 
         return stats;
     }
 
     var stats = initStats();
-    var container, stats;
+    var container;
 
     var camera, scene, renderer;
 
-    var mouseX = 0, mouseY = 0;
+    //var mouseX = 0, mouseY = 0;
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
@@ -70,12 +76,12 @@ jQuery(document).ready(function () {
 
     function setSkyBox() {
 
-        texture_placeholder = document.createElement('canvas');
+        texture_placeholder = document.createElement("canvas");
         texture_placeholder.width = 128;
         texture_placeholder.height = 128;
 
-        var context = texture_placeholder.getContext('2d');
-        context.fillStyle = 'rgb( 200, 200, 200 )';
+        var context = texture_placeholder.getContext("2d");
+        context.fillStyle = "rgb( 200, 200, 200 )";
         context.fillRect(0, 0, texture_placeholder.width, texture_placeholder.height);
 
         // 		var folder = "textures/";
@@ -91,12 +97,12 @@ jQuery(document).ready(function () {
                                 loadTexture( folder + 'pz.jpg' ), // back
                                 loadTexture( folder + 'nz.jpg' )  // front */
 
-            loadTexture(folder + 'posx.jpg'), // right
-            loadTexture(folder + 'negx.jpg'), // left
-            loadTexture(folder + 'posy.jpg'), // top
-            loadTexture(folder + 'negy.jpg'), // bottom
-            loadTexture(folder + 'posz.jpg'), // back
-            loadTexture(folder + 'negz.jpg')  // front
+            loadTexture(folder + "posx.jpg"), // right
+            loadTexture(folder + "negx.jpg"), // left
+            loadTexture(folder + "posy.jpg"), // top
+            loadTexture(folder + "negy.jpg"), // bottom
+            loadTexture(folder + "posz.jpg"), // back
+            loadTexture(folder + "negz.jpg")  // front
         ];
 
         skyboxmesh = new THREE.Mesh(new THREE.CubeGeometry(1300, 1300, 1300, 7, 7, 7), new THREE.MeshFaceMaterial(materials));
@@ -109,7 +115,7 @@ jQuery(document).ready(function () {
 
     function init() {
 
-        container = document.createElement('div');
+        container = document.createElement("div");
         document.body.appendChild(container);
 
         camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
@@ -152,7 +158,7 @@ jQuery(document).ready(function () {
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
-                console.log(Math.round(percentComplete, 2) + '% downloaded');
+                console.log(Math.round(percentComplete, 2) + "% downloaded");
             }
         };
 
@@ -161,17 +167,17 @@ jQuery(document).ready(function () {
         THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
 
         var mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath('3d/');
-        mtlLoader.load('boat3.mtl', function (materials) {
+        mtlLoader.setPath("3d/");
+        mtlLoader.load("boat3.mtl", function (materials) {
 
             materials.preload();
 
             var objLoader = new THREE.OBJLoader();
             objLoader.setMaterials(materials);
-            objLoader.setPath('3d/');
-            objLoader.load('boat3.obj', function (object) {
+            objLoader.setPath("3d/");
+            objLoader.load("boat3.obj", function (object) {
                 // object.doubleSided = true;
-                console.dir(object);
+                //console.dir(object);
                 object.children[0].material.side = THREE.DoubleSide;
                 object.children[1].material.side = THREE.DoubleSide;
                 object.children[2].material.side = THREE.DoubleSide;
@@ -182,15 +188,15 @@ jQuery(document).ready(function () {
         });
 
         mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath('3d/');
-        mtlLoader.load('oar4.mtl', function (materials) {
+        mtlLoader.setPath("3d/");
+        mtlLoader.load("oar4.mtl", function (materials) {
 
             materials.preload();
 
             var objLoader = new THREE.OBJLoader();
             objLoader.setMaterials(materials);
-            objLoader.setPath('3d/');
-            objLoader.load('oar4.obj', function (object2) {
+            objLoader.setPath("3d/");
+            objLoader.load("oar4.obj", function (object2) {
 
                 object2.position.z = -13.5;
                 object2.position.x = -22.7;
@@ -201,15 +207,15 @@ jQuery(document).ready(function () {
 
         });
         mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath('3d/');
-        mtlLoader.load('oarleft.mtl', function (materials) {
+        mtlLoader.setPath("3d/");
+        mtlLoader.load("oarleft.mtl", function (materials) {
 
             materials.preload();
 
             var objLoader = new THREE.OBJLoader();
             objLoader.setMaterials(materials);
-            objLoader.setPath('3d/');
-            objLoader.load('oarleft.obj', function (object2) {
+            objLoader.setPath("3d/");
+            objLoader.load("oarleft.obj", function (object2) {
 
                 object2.position.z = -13.5;
                 object2.position.x = 22.7;
@@ -236,11 +242,11 @@ jQuery(document).ready(function () {
         renderer.setClearColor(0xFFFFFF);
         container.appendChild(renderer.domElement);
 
-        document.addEventListener('mousemove', onDocumentMouseMove, false);
+        document.addEventListener("mousemove", onDocumentMouseMove, false);
 
         //
 
-        window.addEventListener('resize', onWindowResize, false);
+        window.addEventListener("resize", onWindowResize, false);
 
     }
 
@@ -382,7 +388,7 @@ jQuery(document).ready(function () {
             l: 0
         };
 
-        var array = data.split(',');
+        var array = data.split(",");
 
         if (array.length < 2)
             return ret;
