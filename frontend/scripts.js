@@ -7,16 +7,16 @@ jQuery(document).ready(function () {
     var $lastLup = 0;
     var $lastRup = 0;
     var $lastSpeed = 0;
-    var $lastRowValR = -1; 
-    var  $lastRowValL = -1; 
+    var $lastRowValR = -1;
+    var $lastRowValL = -1;
     var maxim = 0;
     var previousAngle = 0;
-    var dirFlag= false;
-    var dirArray=[];
-    var speed=0;
+    var dirFlag = false;
+    var dirArray = [];
+    var speed = 0;
     var frameCount = 0;
-    var randomFreq= 230;
-    var randomViewPos = {x:0, y:10};
+    var randomFreq = 230;
+    var randomViewPos = { x: 0, y: 10 };
 
     var skyboxmesh;
 
@@ -47,65 +47,65 @@ jQuery(document).ready(function () {
     var oar_pivot_left = new THREE.Object3D();
     init();
     animate();
-        
-    function loadTexture( path ) {
 
-                    var texture = new THREE.Texture( texture_placeholder );
-                    var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: true } );
+    function loadTexture(path) {
 
-                    var image = new Image();
-                    image.onload = function () {
+        var texture = new THREE.Texture(texture_placeholder);
+        var material = new THREE.MeshBasicMaterial({ map: texture, overdraw: true });
 
-                        texture.needsUpdate = true;
-                        material.map.image = this;
+        var image = new Image();
+        image.onload = function () {
 
-                        //render();
+            texture.needsUpdate = true;
+            material.map.image = this;
 
-                    };
-                    image.src = path;
+            //render();
 
-                    return material;
+        };
+        image.src = path;
 
-        }
+        return material;
 
-        function setSkyBox() {
-	
-			texture_placeholder = document.createElement( 'canvas' );
-				texture_placeholder.width = 128;
-				texture_placeholder.height = 128;
+    }
 
-				var context = texture_placeholder.getContext( '2d' );
-				context.fillStyle = 'rgb( 200, 200, 200 )';
-				context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
-		
-// 		var folder = "textures/";
-		
-		var folder = "skyboxtex/"; // "netsuns/"; // //"koivuk_skybox/";
-		
-		var materials = [
+    function setSkyBox() {
 
-/* 					loadTexture( folder + 'px.jpg' ), // right
-					loadTexture( folder + 'nx.jpg' ), // left
-					loadTexture( folder + 'py.jpg' ), // top
-					loadTexture( folder + 'ny.jpg' ), // bottom
-					loadTexture( folder + 'pz.jpg' ), // back
-					loadTexture( folder + 'nz.jpg' )  // front */
-					
-					loadTexture( folder + 'posx.jpg' ), // right
-					loadTexture( folder + 'negx.jpg' ), // left
-					loadTexture( folder + 'posy.jpg' ), // top
-					loadTexture( folder + 'negy.jpg' ), // bottom
-					loadTexture( folder + 'posz.jpg' ), // back
-					loadTexture( folder + 'negz.jpg' )  // front
-				];
+        texture_placeholder = document.createElement('canvas');
+        texture_placeholder.width = 128;
+        texture_placeholder.height = 128;
 
-				skyboxmesh = new THREE.Mesh( new THREE.CubeGeometry( 1300, 1300, 1300, 7, 7, 7 ), new THREE.MeshFaceMaterial( materials ) );
-				skyboxmesh.scale.x = - 1;
-				skyboxmesh.position.y = 75;
-                skyboxmesh.rotation.y = -Math.PI * 0.5;
-				scene.add( skyboxmesh );
+        var context = texture_placeholder.getContext('2d');
+        context.fillStyle = 'rgb( 200, 200, 200 )';
+        context.fillRect(0, 0, texture_placeholder.width, texture_placeholder.height);
 
-	}
+        // 		var folder = "textures/";
+
+        var folder = "skyboxtex/"; // "netsuns/"; // //"koivuk_skybox/";
+
+        var materials = [
+
+            /* 					loadTexture( folder + 'px.jpg' ), // right
+                                loadTexture( folder + 'nx.jpg' ), // left
+                                loadTexture( folder + 'py.jpg' ), // top
+                                loadTexture( folder + 'ny.jpg' ), // bottom
+                                loadTexture( folder + 'pz.jpg' ), // back
+                                loadTexture( folder + 'nz.jpg' )  // front */
+
+            loadTexture(folder + 'posx.jpg'), // right
+            loadTexture(folder + 'negx.jpg'), // left
+            loadTexture(folder + 'posy.jpg'), // top
+            loadTexture(folder + 'negy.jpg'), // bottom
+            loadTexture(folder + 'posz.jpg'), // back
+            loadTexture(folder + 'negz.jpg')  // front
+        ];
+
+        skyboxmesh = new THREE.Mesh(new THREE.CubeGeometry(1300, 1300, 1300, 7, 7, 7), new THREE.MeshFaceMaterial(materials));
+        skyboxmesh.scale.x = - 1;
+        skyboxmesh.position.y = 75;
+        skyboxmesh.rotation.y = -Math.PI * 0.5;
+        scene.add(skyboxmesh);
+
+    }
 
     function init() {
 
@@ -128,23 +128,23 @@ jQuery(document).ready(function () {
         directionalLight.position.set(0, 5, 1).normalize();
         scene.add(directionalLight);
 
-		var mapUrl = "texture/sea2.jpg";
+        var mapUrl = "texture/sea2.jpg";
         var map = THREE.ImageUtils.loadTexture(mapUrl);
         var material = new THREE.MeshPhongMaterial({ map: map });
-        var tilesize= 1300;
-        var geometry = new THREE.PlaneGeometry( tilesize, tilesize);
+        var tilesize = 1300;
+        var geometry = new THREE.PlaneGeometry(tilesize, tilesize);
 
-        for (var planeCount = 0;planeCount < 15; planeCount++ ){
+        for (var planeCount = 0; planeCount < 15; planeCount++) {
             var plane = new THREE.Mesh(geometry, material);
             plane.position.y = -4;
             plane.rotation.x = - Math.PI / 2;
-            plane.position.z = -planeCount*tilesize;
-            
-            scene.add(  plane );
+            plane.position.z = -planeCount * tilesize;
+
+            scene.add(plane);
         }
         // model
-       
-        setSkyBox() ;
+
+        setSkyBox();
         scene.add(pivot);
 
         pivot.add(oar_pivot_right);
@@ -276,9 +276,9 @@ jQuery(document).ready(function () {
         stats.update();
         frameCount++;
 
-        if (frameCount % randomFreq == 0){
-            randomViewPos.x= Math.random() * 300 - 150;
-            randomViewPos.y= Math.random() * 150 +1;
+        if (frameCount % randomFreq == 0) {
+            randomViewPos.x = Math.random() * 300 - 150;
+            randomViewPos.y = Math.random() * 150 + 1;
             //console.log(randomViewPos);
         }
 
@@ -286,23 +286,23 @@ jQuery(document).ready(function () {
         //camera.position.x += (mouseX*2 - camera.position.x) * .05;
         //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
-        camera.position.y +=   (  randomViewPos.y - camera.position.y ) * .005;
+        camera.position.y += (randomViewPos.y - camera.position.y) * .005;
         oar_pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
-        oar_pivot_left.rotation.y = $lastL ; //-mouseY / 100 * Math.PI;
+        oar_pivot_left.rotation.y = $lastL; //-mouseY / 100 * Math.PI;
 
 
-               
-         
+
+
         dirArray.push($lastRowValR);
-        if (dirArray.length > 10){
+        if (dirArray.length > 10) {
             dirArray.shift();
         }
         var diffSum = 0;
-        for(var indx = 0; indx < dirArray.length-1; indx++){
-            diffSum += dirArray[indx+1] -dirArray[indx];
-        } 
+        for (var indx = 0; indx < dirArray.length - 1; indx++) {
+            diffSum += dirArray[indx + 1] - dirArray[indx];
+        }
         //console.log(diffSum);
-        if (diffSum > 0  ) {
+        if (diffSum > 0) {
             dirFlag = true;
             //console.log("eteenp");
         } else {
@@ -310,34 +310,34 @@ jQuery(document).ready(function () {
         }
         //console.log(dirArray);
         //previousAngle =values.r;
-        
-        if(dirFlag) {
-             
-              $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
-              $lastLup = 0.2;
-              speed += (diffSum*0.02 - speed) * .01; //= 0.08; //
+
+        if (dirFlag) {
+
+            $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
+            $lastLup = 0.2;
+            speed += (diffSum * 0.02 - speed) * .01; //= 0.08; //
         }
 
-           
+
         else {
             $lastRup = 0;
-           $lastLup = 0 ;
+            $lastLup = 0;
             speed += (0 - speed) * .005; //= 0.01;//
         }
-        
-        oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
-        oar_pivot_left.rotation.z = $lastLup ; //-mouseY / 100 * Math.PI;
 
-        pivot.position.z -=   speed;
-        camera.position.z = pivot.position.z +200;
+        oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
+        oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
+
+        pivot.position.z -= speed;
+        camera.position.z = pivot.position.z + 200;
         skyboxmesh.position.x = camera.position.x;
-	    skyboxmesh.position.z = camera.position.z;
-        var lookatPos = {x:0,y:0,z:0}; 
+        skyboxmesh.position.z = camera.position.z;
+        var lookatPos = { x: 0, y: 0, z: 0 };
         lookatPos.x = pivot.position.x;
         lookatPos.y = pivot.position.y + 5;
         lookatPos.z = pivot.position.z;
         camera.lookAt(lookatPos);
-       
+
         renderer.render(scene, camera);
 
     }
@@ -366,8 +366,8 @@ jQuery(document).ready(function () {
         $lastL = data.l;
         $lastRup = data.upR;
         $lastLup = data.upL;
-        $lastRowValR =  data.rawValR;
-        $lastRowValL =  data.rawValL;
+        $lastRowValR = data.rawValR;
+        $lastRowValL = data.rawValL;
         //$lastSpeed = data.speed;
         //console.log($lastSpeed);
         //renderScene();
@@ -399,11 +399,11 @@ jQuery(document).ready(function () {
         var ret = {
             r: 0,
             l: 0,
-            upR:0,
+            upR: 0,
             upL: 0,
             speed: 0,
-            rawValR:0,
-            rawValL:0,
+            rawValR: 0,
+            rawValL: 0,
         };
         var max_potR = 752;
         var max_potL = 676;
@@ -431,10 +431,10 @@ jQuery(document).ready(function () {
             //console.log(ret.l);
         }*/
 
-    
+
         //ret.upL = ( 0.872 - Math.abs(0- ret.l)) * 0.3;
         //console.log(values.r, (values.r - min_potR), degreeR, ret.r);
-       // console.log(ret);
+        // console.log(ret);
         return ret;
     }
 
