@@ -1,12 +1,14 @@
 
 
-
+"use strict";
 /*jslint browser: true*/
 /*global   jQuery, alert, Stats, THREE,io*/
 
 jQuery(document).ready(function () {
-    var $lastR = -1;
-    var $lastL = -1;
+
+    var handlesDefaults = { left: 65, right: 147 };
+    var $lastR = 45 * 0.0174533;
+    var $lastL =  -45 * 0.0174533;
     var $lastLup = 0;
     var $lastRup = 0;
     var degreeL, degreeR;
@@ -48,7 +50,7 @@ jQuery(document).ready(function () {
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
-    var pivot = new THREE.Object3D();
+    var boat = new THREE.Object3D();
     var oar_pivot_right = new THREE.Object3D();
     var oar_pivot_left = new THREE.Object3D();
     init();
@@ -151,10 +153,10 @@ jQuery(document).ready(function () {
         // model
 
         setSkyBox();
-        scene.add(pivot);
+        scene.add(boat);
 
-        pivot.add(oar_pivot_right);
-        pivot.add(oar_pivot_left);
+        boat.add(oar_pivot_right);
+        boat.add(oar_pivot_left);
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -181,7 +183,7 @@ jQuery(document).ready(function () {
                 object.children[0].material.side = THREE.DoubleSide;
                 object.children[1].material.side = THREE.DoubleSide;
                 object.children[2].material.side = THREE.DoubleSide;
-                pivot.add(object);
+                boat.add(object);
 
             }, onProgress, onError);
 
@@ -233,7 +235,7 @@ jQuery(document).ready(function () {
 
 
 
-        scene.fog = new THREE.Fog(0xc3a8c5, 300, 640);//9c7b99
+        scene.fog = new THREE.Fog(0xc3a8c5, 500, 670);//9c7b99
 
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
@@ -334,14 +336,14 @@ jQuery(document).ready(function () {
         oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
 
-        pivot.position.z -= speed;
-        camera.position.z = pivot.position.z + 200;
+        boat.position.z -= speed;
+        camera.position.z = boat.position.z + 200;
         skyboxmesh.position.x = camera.position.x;
         skyboxmesh.position.z = camera.position.z;
         var lookatPos = { x: 0, y: 0, z: 0 };
-        lookatPos.x = pivot.position.x;
-        lookatPos.y = pivot.position.y + 5;
-        lookatPos.z = pivot.position.z;
+        lookatPos.x = boat.position.x;
+        lookatPos.y = boat.position.y + 5;
+        lookatPos.z = boat.position.z;
         camera.lookAt(lookatPos);
 
         renderer.render(scene, camera);
@@ -394,14 +396,14 @@ jQuery(document).ready(function () {
             return ret;
         ret.r = array[0];
         ret.l = array[1];
-        ret = sanitize_size(ret);
+        ret = processOarRotations(ret);
         //console.log(ret);
         return ret;
     }
 
 
     /* Convert pot values to row oar degrees. */
-    function sanitize_size(values) {
+    function processOarRotations(values) {
         var ret = {
             r: 0,
             l: 0,
@@ -413,8 +415,8 @@ jQuery(document).ready(function () {
         };
         var max_potR = 752;
         var max_potL = 676;
-        var min_potR = 145;
-        var min_potL = 82;
+        var min_potR = handlesDefaults.right;
+        var min_potL = handlesDefaults.left;
         var max_rota_R = 50;
         var max_rota_L = 50;
         var min_rota_R = -50;
