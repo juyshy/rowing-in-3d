@@ -5,7 +5,8 @@
 	"main"        :".etch.js",
 	"dependencies":{
 		"serialport":"*",
-		"socket.io" :"*"
+		"socket.io" :"*",
+		"stdio" :"*"
 	},
 	"engines"     :{
 		"node":"0.6"
