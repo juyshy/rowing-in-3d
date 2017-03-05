@@ -6,32 +6,9 @@
 	<title>Rowing in 3d</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
 	<style>
-		body {
-			font-family: Monospace;
-			background-color: #fff;
-			color: #000;
-			margin: 0px;
-			overflow: hidden;
-		}
-		
-		#info {
-			color: #fff;
-			position: absolute;
-			top: 10px;
-			width: 100%;
-			text-align: center;
-			z-index: 100;
-			display: block;
-		}
-		
-		#info a,
-		.button {
-			color: #f00;
-			font-weight: bold;
-			text-decoration: underline;
-			cursor: pointer
-		}
+	
 	</style>
 </head>
 
@@ -39,6 +16,9 @@
 	<div id="Stats-output">
 	</div>
 	<div id="info">
+	</div>
+
+	<div id="info2">
 	</div>
 	<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
 	<script src="build/three.js"></script>
@@ -48,7 +28,7 @@
 	<script src="js/loaders/OBJLoader.js"></script>
 
 	<script src="js/Detector.js"></script>
-	<script src="js/libs/stats.min.js"></script>
+	<script src="js/libs/stats.js"></script>
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="scripts.js"></script>
 
