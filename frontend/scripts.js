@@ -8,7 +8,7 @@ jQuery(document).ready(function () {
 
     var handlesDefaults = { left: 65, right: 147 };
     var $lastR = 45 * 0.0174533;
-    var $lastL =  -45 * 0.0174533;
+    var $lastL = -45 * 0.0174533;
     var $lastLup = 0;
     var $lastRup = 0;
     var degreeL, degreeR;
@@ -27,6 +27,15 @@ jQuery(document).ready(function () {
     var mouseX, mouseY;
 
     var skyboxmesh;
+    var rowinfo = jQuery("#info2");
+
+    var startTime = Date.now(), prevTime = startTime, prevTime2 = startTime, prevTime1 = startTime;
+    var frameDelays = [];
+    var speedLog = [];
+    var unitMultiplier = 2.0;
+    var speedToRealMult = 8.0;
+    var speedSmoothing = 0.005;
+
 
     function initStats() {
 
@@ -155,6 +164,12 @@ jQuery(document).ready(function () {
         setSkyBox();
         scene.add(boat);
 
+        /*        var geometry = new THREE.PlaneGeometry(100, 100, 4);
+                var material = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
+                var plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = Math.PI / 2;
+                boat.add(plane);*/
+
         boat.add(oar_pivot_right);
         boat.add(oar_pivot_left);
         var onProgress = function (xhr) {
@@ -282,6 +297,15 @@ jQuery(document).ready(function () {
 
     function render() {
         stats.update();
+        var time = Date.now();
+        var timer = 0.001 * time;
+        //console.log(timer);
+        var timedelta = timer - prevTime1;
+        prevTime1 = timer;
+
+
+        var ms = time - startTime;
+
         frameCount++;
 
         if (frameCount % randomFreq == 0) {
@@ -319,22 +343,57 @@ jQuery(document).ready(function () {
         //console.log(dirArray);
         //previousAngle =values.r;
 
+        if (timedelta > 0.05) {
+            timedelta = 0.05;
+        }
+        //  speed = speed * timedelta / 0.018;
+
         if (dirFlag) {
 
             $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
             $lastLup = 0.2;
-            speed += (diffSum * 0.02 - speed) * .01; //= 0.08; //
+            speed += (diffSum * timedelta - speed) * speedSmoothing; //= 0.08; //
         }
-
-
         else {
             $lastRup = 0;
             $lastLup = 0;
             speed += (0 - speed) * .005; //= 0.01;//
         }
 
+
         oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
+
+        var frameDelay = time - prevTime2;
+        if (frameDelay < 45) {
+            frameDelays.push(frameDelay);
+        }
+        if (time > prevTime + 300) {
+            var speedVal = Number(speed).toFixed(2);
+            if (speed > 0) {
+                speedLog.push(speedVal);
+            }
+            var jsonSpeedLog = JSON.stringify(speedLog);
+
+            var realSpeed = speed * speedToRealMult; // m/s
+            var infohtml = "<p> Speed " + Number(realSpeed).toFixed(2) + " m/s </p>";
+            if (realSpeed > 0.2) {
+                var realSpeed500 = 500 / realSpeed;
+                var realSpeed500mins = realSpeed500 / 60;
+                var realSpeed500secs = realSpeed500 % 60;
+                infohtml += "<p> 500m " + Number(realSpeed500).toFixed(0) + " secs  ";
+                infohtml += Number(realSpeed500mins).toFixed(0) + ":";
+                infohtml += Number(realSpeed500secs).toFixed(0) + "</p>";
+            }
+
+            infohtml += "<p> frameCount " + frameCount + "</p>";
+            infohtml += "<p> frameDelay " + frameDelay + "</p>";
+
+            rowinfo.html(infohtml);
+            prevTime = time;
+        }
+        prevTime2 = time;
+
 
         boat.position.z -= speed;
         camera.position.z = boat.position.z + 200;
@@ -347,6 +406,7 @@ jQuery(document).ready(function () {
         camera.lookAt(lookatPos);
 
         renderer.render(scene, camera);
+
 
     }
 
