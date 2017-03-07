@@ -28,14 +28,19 @@ jQuery(document).ready(function () {
 
     var skyboxmesh;
     var rowinfo = jQuery("#info2");
-
+    var rowPositionBufferSize = 10; 
     var startTime = Date.now(), prevTime = startTime, prevTime2 = startTime, prevTime1 = startTime;
     var frameDelays = [];
     var speedLog = [];
     var unitMultiplier = 2.0;
     var speedToRealMult = 8.0;
     var speedSmoothing = 0.005;
-
+    var startTimeDate = new Date(startTime);
+    var startTimestring = startTimeDate.getDate() + "." + (startTimeDate.getMonth() + 1) + "." + startTimeDate.getFullYear() + " " +
+        startTimeDate.getHours() + ":" + startTimeDate.getMinutes() + ":" + startTimeDate.getSeconds();
+    var activityPeriods = [];
+    var activity = false;
+    var prevActiveStartTime;
 
     function initStats() {
 
@@ -100,13 +105,7 @@ jQuery(document).ready(function () {
         var folder = "skyboxtex/"; // "netsuns/"; // //"koivuk_skybox/";
 
         var materials = [
-
-            /* 					loadTexture( folder + 'px.jpg' ), // right
-                                loadTexture( folder + 'nx.jpg' ), // left
-                                loadTexture( folder + 'py.jpg' ), // top
-                                loadTexture( folder + 'ny.jpg' ), // bottom
-                                loadTexture( folder + 'pz.jpg' ), // back
-                                loadTexture( folder + 'nz.jpg' )  // front */
+ 
 
             loadTexture(folder + "posx.jpg"), // right
             loadTexture(folder + "negx.jpg"), // left
@@ -326,7 +325,7 @@ jQuery(document).ready(function () {
 
 
         dirArray.push($lastRowValR);
-        if (dirArray.length > 10) {
+        if (dirArray.length > rowPositionBufferSize) {
             dirArray.shift();
         }
         var diffSum = 0;
@@ -334,7 +333,7 @@ jQuery(document).ready(function () {
             diffSum += dirArray[indx + 1] - dirArray[indx];
         }
         //console.log(diffSum);
-        if (diffSum > 0) {
+        if (diffSum > 0.07) {
             dirFlag = true;
             //console.log("eteenp");
         } else {
@@ -348,8 +347,8 @@ jQuery(document).ready(function () {
         }
         //  speed = speed * timedelta / 0.018;
 
-        if (dirFlag) {
-
+        if (dirFlag) { // direction of oars
+            // move oars to water:
             $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
             $lastLup = 0.2;
             speed += (diffSum * timedelta - speed) * speedSmoothing; //= 0.08; //
@@ -364,11 +363,40 @@ jQuery(document).ready(function () {
         oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
 
+
+
+        if (!activity && (Math.abs(diffSum) > 0 || speed > 0.1)) {
+            activity = true;
+            activityPeriods.push({ start: time });
+            if (typeof prevActiveStartTime === undefined) {
+                prevActiveStartTime = time;
+            }
+        } else if (activity && Math.abs(diffSum) < 0.001 && speed < 0.1) {
+            activity = false;
+            activityPeriods.push({ end: time });
+        }
+
+
+
         var frameDelay = time - prevTime2;
         if (frameDelay < 45) {
             frameDelays.push(frameDelay);
         }
         if (time > prevTime + 300) {
+
+            var cumulativeActivityTime = 0;
+            for (var actIndx = 0; actIndx < activityPeriods.length; actIndx++) {
+                if (activityPeriods[actIndx].start) {
+                    prevActiveStartTime = activityPeriods[actIndx].start;
+                } else {
+                    cumulativeActivityTime += activityPeriods[actIndx].end - prevActiveStartTime;
+                }
+            }
+            if (activity && typeof prevActiveStartTime !== undefined) {
+                cumulativeActivityTime += time - prevActiveStartTime;
+
+            }
+
             var speedVal = Number(speed).toFixed(2);
             if (speed > 0) {
                 speedLog.push(speedVal);
@@ -376,8 +404,21 @@ jQuery(document).ready(function () {
             var jsonSpeedLog = JSON.stringify(speedLog);
 
             var realSpeed = speed * speedToRealMult; // m/s
-            var infohtml = "<p> Speed " + Number(realSpeed).toFixed(2) + " m/s </p>";
+
+            var infohtml = "<p >Session start: " + startTimestring + "  </p>";
+            var sessionDuration = ms / 1000;
+            infohtml += "<p> sessionDuration " + Math.floor(sessionDuration) + "  </p>";
+            infohtml += "<p> activetime " + Math.floor(cumulativeActivityTime / 1000) + "  </p>";
+            infohtml += "<p> diffSum abs " + Math.abs(diffSum) + "  </p>";
+
+            infohtml += "<p> Speed " + Number(speed).toFixed(2) + "   </p>";
+            if (activity)
+                infohtml += '<p class="active"> realSpeed ' + Number(realSpeed).toFixed(2) + " m/s </p>";
+            else
+                infohtml += "<p> realSpeed " + Number(realSpeed).toFixed(2) + " m/s </p>";
+
             if (realSpeed > 0.2) {
+
                 var realSpeed500 = 500 / realSpeed;
                 var realSpeed500mins = realSpeed500 / 60;
                 var realSpeed500secs = realSpeed500 % 60;
