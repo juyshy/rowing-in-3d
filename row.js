@@ -2,7 +2,7 @@
 var fs = require( "fs" );
 var url = require( "url" );
 var stdio = require('stdio');
-
+ 
 
 var $parameterData = { "oarsActive": 0, "logging": 0 };
 
@@ -57,6 +57,8 @@ io.set('log level', 1);
 
 io.sockets.on( "connection", function ( socket ) {
 	// On a new Socket.io connection, load the data provider we want. For now, just Arduino.
-	var $provider = require( './providers/arduino.js' ).init( socket, $parameterData );
+	//var $provider = require( './providers/arduino.js' ).init( socket, $parameterData );
+	var $provider = require( './providers/simulated.js' ).init( socket  );
+	
+	
 } );
-
