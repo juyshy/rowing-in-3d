@@ -28,7 +28,7 @@ jQuery(document).ready(function () {
 
     var skyboxmesh;
     var rowinfo = jQuery("#info2");
-    var rowPositionBufferSize = 10; 
+    var rowPositionBufferSize = 10;
     var startTime = Date.now(), prevTime = startTime, prevTime2 = startTime, prevTime1 = startTime;
     var frameDelays = [];
     var speedLog = [];
@@ -105,7 +105,7 @@ jQuery(document).ready(function () {
         var folder = "skyboxtex/"; // "netsuns/"; // //"koivuk_skybox/";
 
         var materials = [
- 
+
 
             loadTexture(folder + "posx.jpg"), // right
             loadTexture(folder + "negx.jpg"), // left
@@ -321,26 +321,25 @@ jQuery(document).ready(function () {
         oar_pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.y = $lastL; //-mouseY / 100 * Math.PI;
 
-
-
-
+        // making rowing activity buffer:
         dirArray.push($lastRowValR);
         if (dirArray.length > rowPositionBufferSize) {
             dirArray.shift();
         }
-        var diffSum = 0;
+
+        // calculating roqing intensity 
+        var rowingIntensity = 0;
         for (var indx = 0; indx < dirArray.length - 1; indx++) {
-            diffSum += dirArray[indx + 1] - dirArray[indx];
+            rowingIntensity += dirArray[indx + 1] - dirArray[indx];
         }
-        //console.log(diffSum);
-        if (diffSum > 0.07) {
-            dirFlag = true;
-            //console.log("eteenp");
+
+        //determining oar direction 
+        if (rowingIntensity > 0.03) {
+            dirFlag = true; // going forward
+
         } else {
             dirFlag = false;
         }
-        //console.log(dirArray);
-        //previousAngle =values.r;
 
         if (timedelta > 0.05) {
             timedelta = 0.05;
@@ -349,13 +348,31 @@ jQuery(document).ready(function () {
 
         if (dirFlag) { // direction of oars
             // move oars to water:
-            $lastRup = -0.2;// ( -0.3 - ret.upR  ) * 0.05;  //-(0.872 - Math.abs(0- ret.r)) * 0.3;
+            $lastRup = -0.2; 
+        /*    $lastRup -= 0.01
+            if ($lastRup < -0.2) {
+                $lastRup = -0.2;
+            }
+            $lastLup += 0.01;
+            if ($lastLup > 0.2) {
+                $lastLup = 0.2;
+            }*/
             $lastLup = 0.2;
-            speed += (diffSum * timedelta - speed) * speedSmoothing; //= 0.08; //
+            speed += (rowingIntensity * timedelta - speed) * speedSmoothing; //= 0.08; //
         }
         else {
             $lastRup = 0;
             $lastLup = 0;
+
+        /*    $lastRup += 0.01
+            if ($lastRup > 0) {
+                $lastRup = 0;
+            }
+            $lastLup -= 0.01;
+            if ($lastLup < 0) {
+                $lastLup = 0;
+            }*/
+
             speed += (0 - speed) * .005; //= 0.01;//
         }
 
@@ -365,13 +382,13 @@ jQuery(document).ready(function () {
 
 
 
-        if (!activity && (Math.abs(diffSum) > 0 || speed > 0.1)) {
+        if (!activity && (Math.abs(rowingIntensity) > 0 || speed > 0.1)) {
             activity = true;
             activityPeriods.push({ start: time });
             if (typeof prevActiveStartTime === undefined) {
                 prevActiveStartTime = time;
             }
-        } else if (activity && Math.abs(diffSum) < 0.001 && speed < 0.1) {
+        } else if (activity && Math.abs(rowingIntensity) < 0.001 && speed < 0.1) {
             activity = false;
             activityPeriods.push({ end: time });
         }
@@ -409,7 +426,7 @@ jQuery(document).ready(function () {
             var sessionDuration = ms / 1000;
             infohtml += "<p> sessionDuration " + Math.floor(sessionDuration) + "  </p>";
             infohtml += "<p> activetime " + Math.floor(cumulativeActivityTime / 1000) + "  </p>";
-            infohtml += "<p> diffSum abs " + Math.abs(diffSum) + "  </p>";
+            infohtml += "<p> diffSum abs " + Math.abs(rowingIntensity) + "  </p>";
 
             infohtml += "<p> Speed " + Number(speed).toFixed(2) + "   </p>";
             if (activity)
