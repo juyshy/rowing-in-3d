@@ -348,34 +348,30 @@ jQuery(document).ready(function () {
 
         if (dirFlag) { // direction of oars
             // move oars to water:
-            $lastRup = -0.2; 
-        /*    $lastRup -= 0.01
+            $lastRup -= 0.01;
             if ($lastRup < -0.2) {
                 $lastRup = -0.2;
             }
             $lastLup += 0.01;
             if ($lastLup > 0.2) {
                 $lastLup = 0.2;
-            }*/
-            $lastLup = 0.2;
+            }
             speed += (rowingIntensity * timedelta - speed) * speedSmoothing; //= 0.08; //
         }
         else {
-            $lastRup = 0;
-            $lastLup = 0;
+            // $lastRup = 0;
+            // $lastLup = 0;
 
-        /*    $lastRup += 0.01
+            $lastRup += 0.01
             if ($lastRup > 0) {
                 $lastRup = 0;
             }
             $lastLup -= 0.01;
             if ($lastLup < 0) {
                 $lastLup = 0;
-            }*/
-
+            }
             speed += (0 - speed) * .005; //= 0.01;//
         }
-
 
         oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
         oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
@@ -490,8 +486,8 @@ jQuery(document).ready(function () {
         $lastR = data.r;
         //console.log($lastR);
         $lastL = data.l;
-        $lastRup = data.upR;
-        $lastLup = data.upL;
+        // $lastRup = data.upR;
+        // $lastLup = data.upL;
         $lastRowValR = data.rawValR;
         $lastRowValL = data.rawValL;
         //$lastSpeed = data.speed;
