@@ -6,6 +6,25 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var stdio = require('stdio');
+
+
+var $parameterData = { "oarsActive": 0, "logging": 0 };
+
+var ops = stdio.getopt({
+    'oarsActive': { key: 'o', description: 'oars active or not y/n' },
+    'logging': { key: 'l', description: 'Activate logging' },
+});
+
+console.dir(ops);
+if (ops.oarsActive != undefined) {
+    $parameterData.oarsActive = ops.oarsActive;
+}
+if (ops.logging != undefined) {
+    $parameterData.logging = ops.logging;
+}
+console.dir($parameterData);
+
 // Setup application routes
 var routes = require('./routes/index');
 
@@ -27,7 +46,7 @@ app.set('view engine', 'ejs');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
-  extended: true
+    extended: true
 }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,7 +55,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', routes);
 
 // Setup a  404 error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
     var err = new Error('Not Found');
     err.status = 404;
     next(err);
@@ -44,7 +63,7 @@ app.use(function(req, res, next) {
 
 // Print the error stacktrace
 if (app.get('env') === 'development') {
-    app.use(function(err, req, res, next) {
+    app.use(function (err, req, res, next) {
         res.status(err.status || 500);
         res.render('error', {
             message: err.message,
@@ -55,7 +74,7 @@ if (app.get('env') === 'development') {
 }
 
 // No stacktraces on production
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
         message: err.message,
@@ -70,7 +89,7 @@ module.exports = app;
 app.set('port', process.env.PORT || 3000);
 
 // Setup the server port and give a user message
-var server = app.listen(app.get('port'), function() {
+var server = app.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + server.address().port);
 });
 
@@ -83,8 +102,11 @@ var connections = [];
 
 // Start connection listener
 io.sockets.on('connection', function (socket) {
-	
-   var $provider = require('./providers/simulated.js').init(socket);
-  console.log("Connected:", connections.length );
- 
+    if ($parameterData.oarsActive) {
+        var $provider = require('./providers/arduino.js').init(socket, $parameterData);
+    } else {
+        var $provider = require('./providers/simulated.js').init(socket);
+    }
+    console.log("Connected:", connections.length);
+
 });
