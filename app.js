@@ -95,15 +95,30 @@ var server = app.listen(app.get('port'), function () {
 
 // Starting with socket.io
 var io = require('socket.io').listen(server);
- 
 
 // Start connection listener
+
 io.sockets.on('connection', function (socket) {
+    var provider;
+    function simulatedProvider() {
+        provider = require('./providers/simulated.js').init(socket);
+    };
+
     if ($parameterData.oarsActive) {
-        var $provider = require('./providers/arduino.js').init(socket, $parameterData);
+        provider = require('./providers/arduino.js').init(socket, $parameterData, function (success) {
+            if (success) {
+                console.log("Arduino provider success");
+            }
+            else {
+                console.log("Arduino provider not successfull");
+                console.log("falling back to simulation");
+                simulatedProvider();
+            }
+        });
+
     } else {
-        var $provider = require('./providers/simulated.js').init(socket);
+        simulatedProvider();
     }
-    console.log("Connected " );
+    console.log("Connected ");
 
 });

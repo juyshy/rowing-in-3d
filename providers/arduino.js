@@ -1,6 +1,6 @@
 var fs = require("fs");
 var SerialPort = require('serialport');
-var portNames = ["COM5", "COM6", "COM1", "COM2", "COM3", "COM4"];
+var portNames = ["COM5",   "COM1", "COM2", "COM3", "COM7","COM8","COM9" ];
 var portName = portNames[0]; // 
 // process.exit();
 
@@ -12,7 +12,7 @@ var prevTime = scriptStartTime;
 
 module.exports = {
 
-	init: function (socket, params) {
+	init: function (socket, params, successCallback) {
 		console.log("arduino init");
 
 		function initSerial(portName) {
@@ -31,12 +31,19 @@ module.exports = {
 				if (err) {
 					// console.log('Error opening port: ', err.message);
 					portIterateCount++;
-
-					portName = portNames[portIterateCount]
-					initSerial(portName);
+					if (portIterateCount < portNames.length) {
+						portName = portNames[portIterateCount];
+						initSerial(portName);
+					} else {
+						console.log("no success opening serial ports " + portNames);
+						console.log("make sure arduino is connected. "  );
+						successCallback(false);
+						// process.exit();
+					}
 				} else {
 
 					console.log(portName + ' port opened ');
+					successCallback(true);
 					var log2file = params.logging;
 					if (params.oarsActive) {
 
