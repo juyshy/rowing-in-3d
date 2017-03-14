@@ -1,6 +1,6 @@
 var fs = require("fs");
 var SerialPort = require('serialport');
-var portNames = ["COM5",   "COM1", "COM2", "COM3", "COM7","COM8","COM9" ];
+var portNames = ["COM5", "COM6", "COM1", "COM2", "COM3", "COM7","COM8","COM9" ];
 var portName = portNames[0]; // 
 // process.exit();
 
