@@ -1,18 +1,12 @@
 var fs = require("fs");
-
-
-
 var SerialPort = require('serialport');
 var portNames = ["COM5", "COM6", "COM1", "COM2", "COM3", "COM4"];
 var portName = portNames[0]; // 
 // process.exit();
+
 console.log("configuring serial port");
 var sp;
-
 var portIterateCount = 0;
-
-
-
 var scriptStartTime = Date.now();
 var prevTime = scriptStartTime;
 
@@ -20,8 +14,6 @@ module.exports = {
 
 	init: function (socket, params) {
 		console.log("arduino init");
-
-
 
 		function initSerial(portName) {
 			console.log("trying with " + portNames[portIterateCount]);
@@ -65,15 +57,11 @@ module.exports = {
 							// console.log(data);
 							socket.emit("message", data.toString());
 						});
-
 					}
 				}
 			});
-
 		}
-
 		initSerial(portName);
-
 
 	}
 };
