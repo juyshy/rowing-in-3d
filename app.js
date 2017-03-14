@@ -95,10 +95,7 @@ var server = app.listen(app.get('port'), function () {
 
 // Starting with socket.io
 var io = require('socket.io').listen(server);
-// Create an Array to hold users
-var userList = [];
-// Create an Array to hold connections
-var connections = [];
+ 
 
 // Start connection listener
 io.sockets.on('connection', function (socket) {
@@ -107,6 +104,6 @@ io.sockets.on('connection', function (socket) {
     } else {
         var $provider = require('./providers/simulated.js').init(socket);
     }
-    console.log("Connected:", connections.length);
+    console.log("Connected " );
 
 });
