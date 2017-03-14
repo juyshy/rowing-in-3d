@@ -6,7 +6,8 @@
 
 jQuery(document).ready(function () {
 
-    var handlesDefaults = { left: 65, right: 147 };
+    var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
+
     var $lastR = 45 * 0.0174533;
     var $lastL = -45 * 0.0174533;
     var $lastLup = 0;
@@ -527,10 +528,11 @@ jQuery(document).ready(function () {
             rawValR: 0,
             rawValL: 0,
         };
-        var max_potR = 752;
-        var max_potL = 676;
-        var min_potR = handlesDefaults.right;
-        var min_potL = handlesDefaults.left;
+
+        var max_potR = oarDefaults.rightMax;
+        var max_potL = oarDefaults.leftMax;
+        var min_potR = oarDefaults.rightMin;
+        var min_potL = oarDefaults.leftMin;
         var max_rota_R = 50;
         var max_rota_L = 50;
         var min_rota_R = -50;
