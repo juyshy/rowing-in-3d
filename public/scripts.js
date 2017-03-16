@@ -130,7 +130,6 @@ jQuery(document).ready(function () {
 
     var stats = initStats();
 
-
     init();
     animate();
 
@@ -325,37 +324,28 @@ jQuery(document).ready(function () {
         container.appendChild(renderer.domElement);
         document.addEventListener("mousemove", onDocumentMouseMove, false);
         window.addEventListener("resize", onWindowResize, false);
-
+        rowingMachine(oars);
     }
 
     function onWindowResize() {
-
         windowHalfX = window.innerWidth / 2;
         windowHalfY = window.innerHeight / 2;
-
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
-
         renderer.setSize(window.innerWidth, window.innerHeight);
 
     }
 
     function onDocumentMouseMove(event) {
-
         mouseX = (event.clientX - windowHalfX) / 8;
         mouseY = (event.clientY - windowHalfY) / 8;
     }
 
-    //
 
     function animate() {
-
         requestAnimationFrame(animate);
         render();
-
     }
-
-
 
     function render() {
         stats.update();
@@ -364,22 +354,15 @@ jQuery(document).ready(function () {
         //console.log(timer);
         var timedelta = timer - prevTime1;
         prevTime1 = timer;
-
-
         var ms = time - startTime;
-
         frameCount++;
-
 
         var frameDelay = time - prevTime2;
         if (frameDelay < 45) {
             frameDelays.push(frameDelay);
         }
 
-
-
         if (time > prevTime + 300) {
-
             var cumulativeActivityTime = 0;
             for (var actIndx = 0; actIndx < activityPeriods.length; actIndx++) {
                 if (activityPeriods[actIndx].start) {
@@ -473,15 +456,10 @@ jQuery(document).ready(function () {
         lookatPos.y = boat.position.y + 5;
         lookatPos.z = boat.position.z;
         camera.lookAt(lookatPos);
-
         renderer.render(scene, camera);
-
-
     }
 
-
     function rowingMachine(callBackObj) {
-
 
         var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
         var socket = io.connect("/", {
@@ -490,12 +468,9 @@ jQuery(document).ready(function () {
             "max reconnection attempts": 10
         });
 
-
-
         socket.on("message", function (rowingData) {
 
             var processedRowingData = process_data(rowingData);
-
             /* Initial position */
             if (callBackObj.right.lastRowRotation == -1) {
                 callBackObj.right.lastRowRotation = processedRowingData.x;
@@ -504,9 +479,7 @@ jQuery(document).ready(function () {
             }
             callBackObj.updateOarPositions(processedRowingData);
 
-
         });
-
 
         function process_data(data) {
 
@@ -518,18 +491,16 @@ jQuery(document).ready(function () {
                 r: 0,
                 l: 0
             };
+
             var array = data.split(",");
             if (array.length == 2) {
-
                 rawData.r = array[0];
                 rawData.l = array[1];
-
                 processedData = processOarRotations(rawData);
                 //console.log(ret);
                 return processedData;
             }
         }
-
 
         /* Convert pot values to row oar degrees. */
         function processOarRotations(values) {
@@ -569,6 +540,6 @@ jQuery(document).ready(function () {
         }
     }
 
-    rowingMachine(oars);
+
 
 });
