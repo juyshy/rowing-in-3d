@@ -7,26 +7,36 @@
 jQuery(document).ready(function () {
 
 
-    var rowingMachine = {
-        oarDefaults: { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 }
-    }
+
+    var degreeL, degreeR;
+    var rowingIntensity = 0;
+    var dirArray = [];
+    var rowPositionBufferSize = 10;
+    var $lastRowValR = -1;
+    // var oars.left.lastRowRawVal = -1;
     var oars = {
+
         dirFlag: false,
         left: {
             pivot: new THREE.Object3D(),
             initialRowRotation: -45 * Math.PI / 180,
             lastRowRotation: this.lastRowRotation,
             pos: new THREE.Vector3(22.7, 0, -13.5),
-            upRotation: 0
+            upRotation: 0,
+            lastRowRawVal: 0
         },
         right: {
             pivot: new THREE.Object3D(),
             initialRowRotation: 45 * Math.PI / 180,
             lastRowRotation: this.initialRowRotation,
             pos: new THREE.Vector3(-22.7, 0, -13.5),
-            upRotation: 0
+            upRotation: 0,
+            lastRowRawVal: 0
         },
-        setOarsUpDown: function () {
+        updateOars: function () {
+            this.right.pivot.rotation.y = this.right.lastRowRotation; 
+            this.left.pivot.rotation.y = this.left.lastRowRotation;  
+
             if (this.dirFlag) {
                 this.right.upRotation -= 0.01;
                 if (this.right.upRotation < -0.2) {
@@ -48,17 +58,55 @@ jQuery(document).ready(function () {
                     this.left.upRotation = 0;
                 }
             }
+            this.right.pivot.rotation.z = this.right.upRotation;// mouseY / 100 * Math.PI;
+            this.left.pivot.rotation.z = this.left.upRotation; //-mouseY / 100 * Math.PI;
+             
+        },
+        updateOarPositions: function (processedRowingData) {
+            this.right.lastRowRotation = processedRowingData.degreeR;
+            this.left.lastRowRotation = processedRowingData.degreeL;
+            this.right.lastRowRawVal = processedRowingData.rawValR;
+            this.left.lastRowRawVal = processedRowingData.rawValL;
+        },
+        conf: {
+            dirArray: [],
+            rowPositionBufferSize: 10
+        },
+        rowingIntensity: 0,
+        updateRowingIntensity: function () {
 
+            this.conf.dirArray.push(this.right.lastRowRawVal);
+            if (this.conf.dirArray.length > this.conf.rowPositionBufferSize) {
+                this.conf.dirArray.shift();
+            }
+
+            // calculating roqing intensity 
+            this.rowingIntensity = 0;
+            for (var indx = 0; indx < this.conf.dirArray.length - 1; indx++) {
+                this.rowingIntensity += this.conf.dirArray[indx + 1] - this.conf.dirArray[indx];
+            }
+
+            //determining oar direction 
+            if (this.rowingIntensity > 0.03) {
+                oars.dirFlag = true; // going forward
+
+            } else {
+                oars.dirFlag = false;
+            }
         }
+        // oars.right.lastRowRotation = processedRowingData.degreeR;
+        //console.log($lastR);
+        // oars.left.lastRowRotation = processedRowingData.degreeL;
+
     };
-    
+
+    // oars.right.lastRowRawVal = processedRowingData.rawValR;
+    // oars.left.lastRowRawVal = processedRowingData.rawValL;
+
     var speedAdjustMult = 1.0;
-    var degreeL, degreeR;
- 
-    var $lastRowValR = -1;
-    var $lastRowValL = -1;
- 
-    var dirArray = [];
+
+
+
     var speed = 0;
     var frameCount = 0;
     var randomFreq = 230;
@@ -68,7 +116,7 @@ jQuery(document).ready(function () {
 
     var skyboxmesh;
     var rowinfo = jQuery("#info2");
-    var rowPositionBufferSize = 10;
+
     var startTime = Date.now(), prevTime = startTime, prevTime2 = startTime, prevTime1 = startTime;
     var frameDelays = [];
     var speedLog = [];
@@ -105,7 +153,18 @@ jQuery(document).ready(function () {
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
     var boat = new THREE.Object3D();
+    boat.oars = oars;
+    boat.speed = 0;
 
+    boat.updateSpeed = function (timedelta) {
+        if (this.oars.dirFlag) { // direction of oars
+            this.speed += (this.oars.rowingIntensity * timedelta * speedAdjustMult - this.speed) * speedSmoothing; //= 0.08; //
+        }
+        else {
+            this.speed += (0 - this.speed) * .005; //= 0.01;//
+        }
+        // this.speed = speed;
+    }
 
 
     init();
@@ -305,6 +364,7 @@ jQuery(document).ready(function () {
     }
 
 
+
     function render() {
         stats.update();
         var time = Date.now();
@@ -341,23 +401,23 @@ jQuery(document).ready(function () {
 
             }
 
-            var speedVal = Number(speed).toFixed(2);
-            if (speed > 0) {
+            var speedVal = Number(boat.speed).toFixed(2);
+            if (boat.speed > 0) {
                 speedLog.push(speedVal);
             }
             var jsonSpeedLog = JSON.stringify(speedLog);
 
             // var realSpeed = speed * speedToRealMult; // m/s
-            var realSpeed = speed / timedelta * unitMultiplier; // m/s
+            var realSpeed = boat.speed / timedelta * unitMultiplier; // m/s
             var distanceTraveled = boat.position.z * unitMultiplier;
             var infohtml = "<p >Session start: " + startTimestring + "  </p>";
             var sessionDuration = ms / 1000;
             infohtml += "<p> sessionDuration " + Math.floor(sessionDuration) + "  </p>";
             infohtml += "<p> distanceTraveled " + Number(distanceTraveled).toFixed(1) + "  </p>";
             infohtml += "<p> activetime " + Math.floor(cumulativeActivityTime / 1000) + "  </p>";
-            // infohtml += "<p> diffSum abs " + Math.abs(rowingIntensity) + "  </p>";
+            // infohtml += "<p> diffSum abs " + Math.abs(oars.rowingIntensity) + "  </p>";
 
-            infohtml += "<p> Speed " + Number(speed).toFixed(2) + "   </p>";
+            infohtml += "<p> Speed " + Number(boat.speed).toFixed(2) + "   </p>";
             if (activity)
                 infohtml += '<p class="active"> realSpeed ' + Number(realSpeed).toFixed(2) + " m/s </p>";
             else
@@ -386,73 +446,33 @@ jQuery(document).ready(function () {
             randomViewPos.y = Math.random() * 150 + 1;
             //console.log(randomViewPos);
         }
-
-
-        //camera.position.x += (mouseX*2 - camera.position.x) * .05;
-        //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
+ 
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
         camera.position.y += (randomViewPos.y - camera.position.y) * .005;
-        oars.right.pivot.rotation.y = oars.right.lastRowRotation;// mouseY / 100 * Math.PI;
-        oars.left.pivot.rotation.y = oars.left.lastRowRotation; //-mouseY / 100 * Math.PI;
 
-        // making rowing activity buffer:
-        dirArray.push($lastRowValR);
-        if (dirArray.length > rowPositionBufferSize) {
-            dirArray.shift();
-        }
-
-        // calculating roqing intensity 
-        var rowingIntensity = 0;
-        for (var indx = 0; indx < dirArray.length - 1; indx++) {
-            rowingIntensity += dirArray[indx + 1] - dirArray[indx];
-        }
-
-        //determining oar direction 
-        if (rowingIntensity > 0.03) {
-            oars.dirFlag = true; // going forward
-
-        } else {
-            oars.dirFlag = false;
-        }
+        oars.updateRowingIntensity();
 
         if (timedelta > 0.05) {
             timedelta = 0.05;
         }
-        //  speed = speed * timedelta / 0.018;
 
-        oars.setOarsUpDown();
-
-        if (oars.dirFlag) { // direction of oars
-            speed += (rowingIntensity * timedelta * speedAdjustMult - speed) * speedSmoothing; //= 0.08; //
-        }
-        else {
-            // $lastRup = 0;
-            // $lastLup = 0;
-
-            speed += (0 - speed) * .005; //= 0.01;//
-        }
-
-        oars.right.pivot.rotation.z = oars.right.upRotation;// mouseY / 100 * Math.PI;
-        oars.left.pivot.rotation.z = oars.left.upRotation; //-mouseY / 100 * Math.PI;
+        oars.updateOars();
+        boat.updateSpeed(timedelta);
 
 
-
-        if (!activity && (Math.abs(rowingIntensity) > 0 || speed > 0.1)) {
+        if (!activity && (Math.abs(oars.rowingIntensity) > 0 || boat.speed > 0.1)) {
             activity = true;
             activityPeriods.push({ start: time });
             if (typeof prevActiveStartTime === undefined) {
                 prevActiveStartTime = time;
             }
-        } else if (activity && Math.abs(rowingIntensity) < 0.001 && speed < 0.1) {
+        } else if (activity && Math.abs(oars.rowingIntensity) < 0.001 && boat.speed < 0.1) {
             activity = false;
             activityPeriods.push({ end: time });
         }
 
 
-
-
-
-        boat.position.z -= speed;
+        boat.position.z -= boat.speed;
         camera.position.z = boat.position.z + 200;
         skyboxmesh.position.x = camera.position.x;
         skyboxmesh.position.z = camera.position.z;
@@ -468,106 +488,94 @@ jQuery(document).ready(function () {
     }
 
 
-    var socket = io.connect("/", {
-        "reconnect": true,
-        "reconnection delay": 500,
-        "max reconnection attempts": 10
-    });
+    function rowingMachine(callBackObj) {
+
+
+        var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
+        var socket = io.connect("/", {
+            "reconnect": true,
+            "reconnection delay": 500,
+            "max reconnection attempts": 10
+        });
 
 
 
-    socket.on("message", function (rowingData) {
+        socket.on("message", function (rowingData) {
 
-        var processedRowingData = process_data(rowingData);
+            var processedRowingData = process_data(rowingData);
 
-        /* Initial position */
-        if (oars.right.lastRowRotation == -1) {
-            oars.right.lastRowRotation = processedRowingData.x;
-            oars.left.lastRowRotation = processedRowingData.y;
+            /* Initial position */
+            if (callBackObj.right.lastRowRotation == -1) {
+                callBackObj.right.lastRowRotation = processedRowingData.x;
+                callBackObj.left.lastRowRotation = processedRowingData.y;
 
+            }
+            callBackObj.updateOarPositions(processedRowingData);
+
+
+        });
+
+
+        function process_data(data) {
+
+            var rawData = {
+                r: 0,
+                l: 0
+            };
+            var processedData = {
+                r: 0,
+                l: 0
+            };
+            var array = data.split(",");
+            if (array.length == 2) {
+
+                rawData.r = array[0];
+                rawData.l = array[1];
+
+                processedData = processOarRotations(rawData);
+                //console.log(ret);
+                return processedData;
+            }
         }
 
-        oars.right.lastRowRotation = processedRowingData.degreeR;
-        //console.log($lastR);
-        oars.left.lastRowRotation = processedRowingData.degreeL;
-        // $lastRup = data.upR;
-        // $lastLup = data.upL;
-        $lastRowValR = processedRowingData.rawValR;
-        $lastRowValL = processedRowingData.rawValL;
-        //$lastSpeed = data.speed;
-        //console.log($lastSpeed);
-        //renderScene();
 
-    });
+        /* Convert pot values to row oar degrees. */
+        function processOarRotations(values) {
+            var ret = {
+                r: 0,
+                l: 0,
+                upR: 0,
+                upL: 0,
+                speed: 0,
+                rawValR: 0,
+                rawValL: 0,
+            };
 
+            var max_potR = oarDefaults.rightMax;
+            var max_potL = oarDefaults.leftMax;
+            var min_potR = oarDefaults.rightMin;
+            var min_potL = oarDefaults.leftMin;
+            var max_rota_R = 50;
+            var max_rota_L = 50;
+            var min_rota_R = -50;
+            var min_rota_L = -50;
+            var maxPot_R_delta = max_potR - min_potR;
+            var maxPot_L_delta = max_potL - min_potL;
+            var max_rota_R_delta = max_rota_R - min_rota_R;
+            var max_rota_L_delta = max_rota_L - min_rota_L;
+            var pot2rotR_ratio = max_rota_R_delta / maxPot_R_delta;
+            var pot2rotL_ratio = max_rota_L_delta / maxPot_L_delta;
+            degreeR = ((values.r - min_potR) * pot2rotR_ratio + min_rota_R);
+            degreeL = (values.l - min_potL) * pot2rotL_ratio + min_rota_L;
+            ret.rawValR = values.r;
+            ret.rawValR = values.l;
+            ret.degreeR = -degreeR * 0.0174533;
+            ret.degreeL = degreeL * 0.0174533;
 
-    function process_data(data) {
-
-        var rawData = {
-            r: 0,
-            l: 0
-        };
-        var processedData = {
-            r: 0,
-            l: 0
-        };
-        var array = data.split(",");
-        if (array.length == 2) {
-
-            rawData.r = array[0];
-            rawData.l = array[1];
-
-            processedData = processOarRotations(rawData);
-            //console.log(ret);
-            return processedData;
+            return ret;
         }
     }
 
+    rowingMachine(oars);
 
-    /* Convert pot values to row oar degrees. */
-    function processOarRotations(values) {
-        var ret = {
-            r: 0,
-            l: 0,
-            upR: 0,
-            upL: 0,
-            speed: 0,
-            rawValR: 0,
-            rawValL: 0,
-        };
-
-        var max_potR = rowingMachine.oarDefaults.rightMax;
-        var max_potL = rowingMachine.oarDefaults.leftMax;
-        var min_potR = rowingMachine.oarDefaults.rightMin;
-        var min_potL = rowingMachine.oarDefaults.leftMin;
-        var max_rota_R = 50;
-        var max_rota_L = 50;
-        var min_rota_R = -50;
-        var min_rota_L = -50;
-        var maxPot_R_delta = max_potR - min_potR;
-        var maxPot_L_delta = max_potL - min_potL;
-        var max_rota_R_delta = max_rota_R - min_rota_R;
-        var max_rota_L_delta = max_rota_L - min_rota_L;
-        var pot2rotR_ratio = max_rota_R_delta / maxPot_R_delta;
-        var pot2rotL_ratio = max_rota_L_delta / maxPot_L_delta;
-        degreeR = ((values.r - min_potR) * pot2rotR_ratio + min_rota_R);
-        degreeL = (values.l - min_potL) * pot2rotL_ratio + min_rota_L;
-        ret.rawValR = values.r;
-        ret.rawValR = values.l;
-        ret.degreeR = -degreeR * 0.0174533;
-        ret.degreeL = degreeL * 0.0174533;
-        /*
-        if(maxim < ret.l){
-            maxim = ret.l;
-            //console.log(ret.l);
-        }*/
-
-
-        //ret.upL = ( 0.872 - Math.abs(0- ret.l)) * 0.3;
-        //console.log(values.r, (values.r - min_potR), degreeR, ret.r);
-        // console.log(ret);
-        return ret;
-    }
-
-}
-);
+});
