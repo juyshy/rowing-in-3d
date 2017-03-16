@@ -1,21 +1,11 @@
 
-
 "use strict";
 /*jslint browser: true*/
 /*global   jQuery, alert, Stats, THREE,io*/
 
 jQuery(document).ready(function () {
 
-
-
-    var degreeL, degreeR;
-    var rowingIntensity = 0;
-    var dirArray = [];
-    var rowPositionBufferSize = 10;
-    var $lastRowValR = -1;
-    // var oars.left.lastRowRawVal = -1;
     var oars = {
-
         dirFlag: false,
         left: {
             pivot: new THREE.Object3D(),
@@ -34,8 +24,8 @@ jQuery(document).ready(function () {
             lastRowRawVal: 0
         },
         updateOars: function () {
-            this.right.pivot.rotation.y = this.right.lastRowRotation; 
-            this.left.pivot.rotation.y = this.left.lastRowRotation;  
+            this.right.pivot.rotation.y = this.right.lastRowRotation;
+            this.left.pivot.rotation.y = this.left.lastRowRotation;
 
             if (this.dirFlag) {
                 this.right.upRotation -= 0.01;
@@ -46,7 +36,7 @@ jQuery(document).ready(function () {
                 if (this.left.upRotation > 0.2) {
                     this.left.upRotation = 0.2;
                 }
-                // speed += (rowingIntensity * timedelta * speedAdjustMult - speed) * speedSmoothing; //= 0.08; 
+
             } else {
 
                 this.right.upRotation += 0.01;
@@ -60,7 +50,7 @@ jQuery(document).ready(function () {
             }
             this.right.pivot.rotation.z = this.right.upRotation;// mouseY / 100 * Math.PI;
             this.left.pivot.rotation.z = this.left.upRotation; //-mouseY / 100 * Math.PI;
-             
+
         },
         updateOarPositions: function (processedRowingData) {
             this.right.lastRowRotation = processedRowingData.degreeR;
@@ -80,34 +70,23 @@ jQuery(document).ready(function () {
                 this.conf.dirArray.shift();
             }
 
-            // calculating roqing intensity 
+            // calculating rowing intensity 
             this.rowingIntensity = 0;
             for (var indx = 0; indx < this.conf.dirArray.length - 1; indx++) {
                 this.rowingIntensity += this.conf.dirArray[indx + 1] - this.conf.dirArray[indx];
             }
-
             //determining oar direction 
             if (this.rowingIntensity > 0.03) {
                 oars.dirFlag = true; // going forward
-
             } else {
                 oars.dirFlag = false;
             }
         }
-        // oars.right.lastRowRotation = processedRowingData.degreeR;
-        //console.log($lastR);
-        // oars.left.lastRowRotation = processedRowingData.degreeL;
-
     };
 
-    // oars.right.lastRowRawVal = processedRowingData.rawValR;
-    // oars.left.lastRowRawVal = processedRowingData.rawValL;
 
     var speedAdjustMult = 1.0;
 
-
-
-    var speed = 0;
     var frameCount = 0;
     var randomFreq = 230;
     var randomViewPos = { x: 0, y: 10 };
@@ -446,7 +425,7 @@ jQuery(document).ready(function () {
             randomViewPos.y = Math.random() * 150 + 1;
             //console.log(randomViewPos);
         }
- 
+
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
         camera.position.y += (randomViewPos.y - camera.position.y) * .005;
 
@@ -551,6 +530,7 @@ jQuery(document).ready(function () {
                 rawValL: 0,
             };
 
+            var degreeL, degreeR;
             var max_potR = oarDefaults.rightMax;
             var max_potL = oarDefaults.leftMax;
             var min_potR = oarDefaults.rightMin;
