@@ -8,8 +8,8 @@ jQuery(document).ready(function () {
 
     var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
 
-    var $lastR = 45 * 0.0174533;
-    var $lastL = -45 * 0.0174533;
+    var $lastRightRowRotation = 45 * 0.0174533;
+    var $lastLeftRowRotation = -45 * 0.0174533;
     var $lastLup = 0;
     var $lastRup = 0;
     var speedAdjustMult = 1.0;
@@ -359,8 +359,8 @@ jQuery(document).ready(function () {
         //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
         camera.position.y += (randomViewPos.y - camera.position.y) * .005;
-        oars.pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
-        oars.pivot_left.rotation.y = $lastL; //-mouseY / 100 * Math.PI;
+        oars.pivot_right.rotation.y = $lastRightRowRotation;// mouseY / 100 * Math.PI;
+        oars.pivot_left.rotation.y = $lastLeftRowRotation; //-mouseY / 100 * Math.PI;
 
         // making rowing activity buffer:
         dirArray.push($lastRowValR);
@@ -457,24 +457,24 @@ jQuery(document).ready(function () {
 
 
 
-    socket.on("message", function (data) {
+    socket.on("message", function (rowingData) {
 
-        data = process_data(data);
+        var processedRowingData = process_data(rowingData);
 
         /* Initial position */
-        if ($lastR == -1) {
-            $lastR = data.x;
-            $lastL = data.y;
+        if ($lastRightRowRotation == -1) {
+            $lastRightRowRotation = processedRowingData.x;
+            $lastLeftRowRotation = processedRowingData.y;
 
         }
 
-        $lastR = data.r;
+        $lastRightRowRotation = processedRowingData.degreeR;
         //console.log($lastR);
-        $lastL = data.l;
+        $lastLeftRowRotation = processedRowingData.degreeL;
         // $lastRup = data.upR;
         // $lastLup = data.upL;
-        $lastRowValR = data.rawValR;
-        $lastRowValL = data.rawValL;
+        $lastRowValR = processedRowingData.rawValR;
+        $lastRowValL = processedRowingData.rawValL;
         //$lastSpeed = data.speed;
         //console.log($lastSpeed);
         //renderScene();
@@ -484,20 +484,24 @@ jQuery(document).ready(function () {
 
     function process_data(data) {
 
-        var ret = {
+        var rawData = {
             r: 0,
             l: 0
         };
-
+        var processedData = {
+            r: 0,
+            l: 0
+        };
         var array = data.split(",");
+        if (array.length == 2) {
 
-        if (array.length < 2)
-            return ret;
-        ret.r = array[0];
-        ret.l = array[1];
-        ret = processOarRotations(ret);
-        //console.log(ret);
-        return ret;
+            rawData.r = array[0];
+            rawData.l = array[1];
+
+            processedData = processOarRotations(rawData);
+            //console.log(ret);
+            return processedData;
+        }
     }
 
 
@@ -531,8 +535,8 @@ jQuery(document).ready(function () {
         degreeL = (values.l - min_potL) * pot2rotL_ratio + min_rota_L;
         ret.rawValR = values.r;
         ret.rawValR = values.l;
-        ret.r = -degreeR * 0.0174533;
-        ret.l = degreeL * 0.0174533;
+        ret.degreeR = -degreeR * 0.0174533;
+        ret.degreeL = degreeL * 0.0174533;
         /*
         if(maxim < ret.l){
             maxim = ret.l;
