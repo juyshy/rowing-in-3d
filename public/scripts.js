@@ -12,6 +12,7 @@ jQuery(document).ready(function () {
     var $lastL = -45 * 0.0174533;
     var $lastLup = 0;
     var $lastRup = 0;
+    var speedAdjustMult = 1.0;
     var degreeL, degreeR;
     //var $lastSpeed = 0;
     var $lastRowValR = -1;
@@ -33,7 +34,7 @@ jQuery(document).ready(function () {
     var startTime = Date.now(), prevTime = startTime, prevTime2 = startTime, prevTime1 = startTime;
     var frameDelays = [];
     var speedLog = [];
-    var unitMultiplier = 2.0;
+    var unitMultiplier = 0.2;
     var speedToRealMult = 8.0;
     var speedSmoothing = 0.005;
     var startTimeDate = new Date(startTime);
@@ -164,12 +165,21 @@ jQuery(document).ready(function () {
         setSkyBox();
         scene.add(boat);
 
-        /*        var geometry = new THREE.PlaneGeometry(100, 100, 4);
+        /*        var geometry = new THREE.PlaneGeometry(4, 4, 4);
+                // var geometry = new THREE.PlaneGeometry(100, 100, 4);
+        
                 var material = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
                 var plane = new THREE.Mesh(geometry, material);
                 plane.rotation.x = Math.PI / 2;
-                boat.add(plane);*/
-
+                plane.position.z = 50;
+                plane.position.y = 20;
+                boat.add(plane);
+                var plane2 = new THREE.Mesh(geometry, material);
+                plane2.position.z = -50;
+                plane2.position.y = 20;
+                plane2.rotation.x = Math.PI / 2;
+                boat.add(plane2);
+        */
         boat.add(oar_pivot_right);
         boat.add(oar_pivot_left);
         var onProgress = function (xhr) {
@@ -308,6 +318,69 @@ jQuery(document).ready(function () {
 
         frameCount++;
 
+
+        var frameDelay = time - prevTime2;
+        if (frameDelay < 45) {
+            frameDelays.push(frameDelay);
+        }
+
+
+
+        if (time > prevTime + 300) {
+
+            var cumulativeActivityTime = 0;
+            for (var actIndx = 0; actIndx < activityPeriods.length; actIndx++) {
+                if (activityPeriods[actIndx].start) {
+                    prevActiveStartTime = activityPeriods[actIndx].start;
+                } else {
+                    cumulativeActivityTime += activityPeriods[actIndx].end - prevActiveStartTime;
+                }
+            }
+            if (activity && typeof prevActiveStartTime !== undefined) {
+                cumulativeActivityTime += time - prevActiveStartTime;
+
+            }
+
+            var speedVal = Number(speed).toFixed(2);
+            if (speed > 0) {
+                speedLog.push(speedVal);
+            }
+            var jsonSpeedLog = JSON.stringify(speedLog);
+
+            // var realSpeed = speed * speedToRealMult; // m/s
+            var realSpeed = speed / timedelta * unitMultiplier; // m/s
+            var distanceTraveled = boat.position.z * unitMultiplier;
+            var infohtml = "<p >Session start: " + startTimestring + "  </p>";
+            var sessionDuration = ms / 1000;
+            infohtml += "<p> sessionDuration " + Math.floor(sessionDuration) + "  </p>";
+            infohtml += "<p> distanceTraveled " + Number(distanceTraveled).toFixed(1) + "  </p>";
+            infohtml += "<p> activetime " + Math.floor(cumulativeActivityTime / 1000) + "  </p>";
+            // infohtml += "<p> diffSum abs " + Math.abs(rowingIntensity) + "  </p>";
+
+            infohtml += "<p> Speed " + Number(speed).toFixed(2) + "   </p>";
+            if (activity)
+                infohtml += '<p class="active"> realSpeed ' + Number(realSpeed).toFixed(2) + " m/s </p>";
+            else
+                infohtml += "<p> realSpeed " + Number(realSpeed).toFixed(2) + " m/s </p>";
+
+            if (realSpeed > 0.2) {
+
+                var realSpeed500 = 500 / realSpeed;
+                var realSpeed500mins = realSpeed500 / 60;
+                var realSpeed500secs = realSpeed500 % 60;
+                infohtml += "<p> 500m " + Number(realSpeed500).toFixed(0) + " secs  ";
+                infohtml += Number(realSpeed500mins).toFixed(0) + ":";
+                infohtml += Number(realSpeed500secs).toFixed(0) + "</p>";
+            }
+
+            infohtml += "<p> frameCount " + frameCount + "</p>";
+            infohtml += "<p> frameDelay " + frameDelay + "</p>";
+
+            rowinfo.html(infohtml);
+            prevTime = time;
+        }
+        prevTime2 = time;
+
         if (frameCount % randomFreq == 0) {
             randomViewPos.x = Math.random() * 300 - 150;
             randomViewPos.y = Math.random() * 150 + 1;
@@ -357,7 +430,7 @@ jQuery(document).ready(function () {
             if ($lastLup > 0.2) {
                 $lastLup = 0.2;
             }
-            speed += (rowingIntensity * timedelta - speed) * speedSmoothing; //= 0.08; //
+            speed += (rowingIntensity * timedelta * speedAdjustMult - speed) * speedSmoothing; //= 0.08; //
         }
         else {
             // $lastRup = 0;
@@ -392,62 +465,6 @@ jQuery(document).ready(function () {
 
 
 
-        var frameDelay = time - prevTime2;
-        if (frameDelay < 45) {
-            frameDelays.push(frameDelay);
-        }
-        if (time > prevTime + 300) {
-
-            var cumulativeActivityTime = 0;
-            for (var actIndx = 0; actIndx < activityPeriods.length; actIndx++) {
-                if (activityPeriods[actIndx].start) {
-                    prevActiveStartTime = activityPeriods[actIndx].start;
-                } else {
-                    cumulativeActivityTime += activityPeriods[actIndx].end - prevActiveStartTime;
-                }
-            }
-            if (activity && typeof prevActiveStartTime !== undefined) {
-                cumulativeActivityTime += time - prevActiveStartTime;
-
-            }
-
-            var speedVal = Number(speed).toFixed(2);
-            if (speed > 0) {
-                speedLog.push(speedVal);
-            }
-            var jsonSpeedLog = JSON.stringify(speedLog);
-
-            var realSpeed = speed * speedToRealMult; // m/s
-
-            var infohtml = "<p >Session start: " + startTimestring + "  </p>";
-            var sessionDuration = ms / 1000;
-            infohtml += "<p> sessionDuration " + Math.floor(sessionDuration) + "  </p>";
-            infohtml += "<p> activetime " + Math.floor(cumulativeActivityTime / 1000) + "  </p>";
-            infohtml += "<p> diffSum abs " + Math.abs(rowingIntensity) + "  </p>";
-
-            infohtml += "<p> Speed " + Number(speed).toFixed(2) + "   </p>";
-            if (activity)
-                infohtml += '<p class="active"> realSpeed ' + Number(realSpeed).toFixed(2) + " m/s </p>";
-            else
-                infohtml += "<p> realSpeed " + Number(realSpeed).toFixed(2) + " m/s </p>";
-
-            if (realSpeed > 0.2) {
-
-                var realSpeed500 = 500 / realSpeed;
-                var realSpeed500mins = realSpeed500 / 60;
-                var realSpeed500secs = realSpeed500 % 60;
-                infohtml += "<p> 500m " + Number(realSpeed500).toFixed(0) + " secs  ";
-                infohtml += Number(realSpeed500mins).toFixed(0) + ":";
-                infohtml += Number(realSpeed500secs).toFixed(0) + "</p>";
-            }
-
-            infohtml += "<p> frameCount " + frameCount + "</p>";
-            infohtml += "<p> frameDelay " + frameDelay + "</p>";
-
-            rowinfo.html(infohtml);
-            prevTime = time;
-        }
-        prevTime2 = time;
 
 
         boat.position.z -= speed;
