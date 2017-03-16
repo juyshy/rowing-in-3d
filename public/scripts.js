@@ -67,8 +67,12 @@ jQuery(document).ready(function () {
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
     var boat = new THREE.Object3D();
-    var oar_pivot_right = new THREE.Object3D();
-    var oar_pivot_left = new THREE.Object3D();
+
+    var oars = {
+        pivot_right: new THREE.Object3D(),
+        pivot_left: new THREE.Object3D()
+    };
+
     init();
     animate();
 
@@ -125,6 +129,7 @@ jQuery(document).ready(function () {
 
     }
 
+
     function init() {
 
         container = document.createElement("div");
@@ -180,8 +185,8 @@ jQuery(document).ready(function () {
                 plane2.rotation.x = Math.PI / 2;
                 boat.add(plane2);
         */
-        boat.add(oar_pivot_right);
-        boat.add(oar_pivot_left);
+        boat.add(oars.pivot_right);
+        boat.add(oars.pivot_left);
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -193,86 +198,48 @@ jQuery(document).ready(function () {
 
         THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
 
-        var mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath("3d/");
-        mtlLoader.load("boat3.mtl", function (materials) {
+        function load3DObject(objFile, mtlFile, path, attachObject,
+            pos = new THREE.Vector3(), doubleSided = false) {
+            var mtlLoader = new THREE.MTLLoader();
+            mtlLoader.setPath(path);
+            mtlLoader.load(mtlFile, function (materials) {
+                materials.preload();
+                var objLoader = new THREE.OBJLoader();
+                objLoader.setMaterials(materials);
+                objLoader.setPath(path);
+                objLoader.load(objFile, function (object) {
+                    object.position.z = pos.z;
+                    object.position.x = pos.x;
+                    if (doubleSided)
+                        for (var meshIndx = 0; meshIndx < object.children.length; meshIndx++) {
+                            object.children[meshIndx].material.side = THREE.DoubleSide;
+                        }
+                    //console.dir(object2);
+                    attachObject.add(object);
+                }, onProgress, onError);
+            });
+        };
 
-            materials.preload();
+        load3DObject("boat3.obj", "boat3.mtl", "3d/", boat, new THREE.Vector3(), true);
 
-            var objLoader = new THREE.OBJLoader();
-            objLoader.setMaterials(materials);
-            objLoader.setPath("3d/");
-            objLoader.load("boat3.obj", function (object) {
-                // object.doubleSided = true;
-                //console.dir(object);
-                object.children[0].material.side = THREE.DoubleSide;
-                object.children[1].material.side = THREE.DoubleSide;
-                object.children[2].material.side = THREE.DoubleSide;
-                boat.add(object);
+        var rightOarPos = new THREE.Vector3(-22.7, 0, -13.5);
+        load3DObject("oar4.obj", "oar4.mtl", "3d/", oars.pivot_right, rightOarPos);
+        var leftOarPos = new THREE.Vector3(22.7, 0, -13.5);
+        load3DObject("oarleft.obj", "oarleft.mtl", "3d/", oars.pivot_left, leftOarPos);
 
-            }, onProgress, onError);
-
-        });
-
-        mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath("3d/");
-        mtlLoader.load("oar4.mtl", function (materials) {
-
-            materials.preload();
-
-            var objLoader = new THREE.OBJLoader();
-            objLoader.setMaterials(materials);
-            objLoader.setPath("3d/");
-            objLoader.load("oar4.obj", function (object2) {
-
-                object2.position.z = -13.5;
-                object2.position.x = -22.7;
-                //console.dir(object2);
-                oar_pivot_right.add(object2);
-
-            }, onProgress, onError);
-
-        });
-        mtlLoader = new THREE.MTLLoader();
-        mtlLoader.setPath("3d/");
-        mtlLoader.load("oarleft.mtl", function (materials) {
-
-            materials.preload();
-
-            var objLoader = new THREE.OBJLoader();
-            objLoader.setMaterials(materials);
-            objLoader.setPath("3d/");
-            objLoader.load("oarleft.obj", function (object2) {
-
-                object2.position.z = -13.5;
-                object2.position.x = 22.7;
-                oar_pivot_left.add(object2);
-
-            }, onProgress, onError);
-
-        });
-        oar_pivot_right.position.z = 13.5;
-        oar_pivot_right.position.x = 22.7;
-        oar_pivot_left.position.z = 13.5;
-        oar_pivot_left.position.x = -22.7;
-
-        //
-
+        oars.pivot_right.position.z = 13.5;
+        oars.pivot_right.position.x = 22.7;
+        oars.pivot_left.position.z = 13.5;
+        oars.pivot_left.position.x = -22.7;
 
 
         scene.fog = new THREE.Fog(0xc3a8c5, 500, 670);//9c7b99
-
         renderer = new THREE.WebGLRenderer();
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(window.innerWidth, window.innerHeight);
-
         renderer.setClearColor(0xFFFFFF);
         container.appendChild(renderer.domElement);
-
         document.addEventListener("mousemove", onDocumentMouseMove, false);
-
-        //
-
         window.addEventListener("resize", onWindowResize, false);
 
     }
@@ -392,8 +359,8 @@ jQuery(document).ready(function () {
         //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
         camera.position.y += (randomViewPos.y - camera.position.y) * .005;
-        oar_pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
-        oar_pivot_left.rotation.y = $lastL; //-mouseY / 100 * Math.PI;
+        oars.pivot_right.rotation.y = $lastR;// mouseY / 100 * Math.PI;
+        oars.pivot_left.rotation.y = $lastL; //-mouseY / 100 * Math.PI;
 
         // making rowing activity buffer:
         dirArray.push($lastRowValR);
@@ -436,7 +403,7 @@ jQuery(document).ready(function () {
             // $lastRup = 0;
             // $lastLup = 0;
 
-            $lastRup += 0.01
+            $lastRup += 0.01;
             if ($lastRup > 0) {
                 $lastRup = 0;
             }
@@ -447,8 +414,8 @@ jQuery(document).ready(function () {
             speed += (0 - speed) * .005; //= 0.01;//
         }
 
-        oar_pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
-        oar_pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
+        oars.pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
+        oars.pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
 
 
 
