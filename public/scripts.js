@@ -8,8 +8,31 @@ jQuery(document).ready(function () {
 
     var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
 
-    var $lastRightRowRotation = 45 * 0.0174533;
-    var $lastLeftRowRotation = -45 * 0.0174533;
+    /*    var right.initialRowRotation = 45 * Math.PI / 180;
+        var left.initialRowRotation = -45 * Math.PI / 180;
+        var oars.right.lastRowRotation = right.initialRowRotation;
+        var oars.left.lastRowRotation = left.initialRowRotation;
+    */
+
+    var oars = {
+        left: {
+            pivot: new THREE.Object3D(),
+            initialRowRotation: -45 * Math.PI / 180,
+            lastRowRotation: this.lastRowRotation,
+            pos: new THREE.Vector3(22.7, 0, -13.5)
+        },
+        right: {
+            pivot: new THREE.Object3D(),
+            initialRowRotation: 45 * Math.PI / 180,
+            lastRowRotation: this.initialRowRotation,
+            pos: new THREE.Vector3(-22.7, 0, -13.5)
+        },
+
+    };
+
+
+    // oars.right.lastRowRotation = oars.right.initialRowRotation
+
     var $lastLup = 0;
     var $lastRup = 0;
     var speedAdjustMult = 1.0;
@@ -68,10 +91,7 @@ jQuery(document).ready(function () {
     var windowHalfY = window.innerHeight / 2;
     var boat = new THREE.Object3D();
 
-    var oars = {
-        pivot_right: new THREE.Object3D(),
-        pivot_left: new THREE.Object3D()
-    };
+
 
     init();
     animate();
@@ -168,6 +188,7 @@ jQuery(document).ready(function () {
         // model
 
         setSkyBox();
+        
         scene.add(boat);
 
         /*        var geometry = new THREE.PlaneGeometry(4, 4, 4);
@@ -185,8 +206,8 @@ jQuery(document).ready(function () {
                 plane2.rotation.x = Math.PI / 2;
                 boat.add(plane2);
         */
-        boat.add(oars.pivot_right);
-        boat.add(oars.pivot_left);
+        boat.add(oars.right.pivot);
+        boat.add(oars.left.pivot);
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -221,16 +242,13 @@ jQuery(document).ready(function () {
         };
 
         load3DObject("boat3.obj", "boat3.mtl", "3d/", boat, new THREE.Vector3(), true);
+        load3DObject("oar4.obj", "oar4.mtl", "3d/", oars.right.pivot, oars.right.pos);
+        load3DObject("oarleft.obj", "oarleft.mtl", "3d/", oars.left.pivot, oars.left.pos);
 
-        var rightOarPos = new THREE.Vector3(-22.7, 0, -13.5);
-        load3DObject("oar4.obj", "oar4.mtl", "3d/", oars.pivot_right, rightOarPos);
-        var leftOarPos = new THREE.Vector3(22.7, 0, -13.5);
-        load3DObject("oarleft.obj", "oarleft.mtl", "3d/", oars.pivot_left, leftOarPos);
-
-        oars.pivot_right.position.z = 13.5;
-        oars.pivot_right.position.x = 22.7;
-        oars.pivot_left.position.z = 13.5;
-        oars.pivot_left.position.x = -22.7;
+        oars.right.pivot.position.z = 13.5;
+        oars.right.pivot.position.x = 22.7;
+        oars.left.pivot.position.z = 13.5;
+        oars.left.pivot.position.x = -22.7;
 
 
         scene.fog = new THREE.Fog(0xc3a8c5, 500, 670);//9c7b99
@@ -359,8 +377,8 @@ jQuery(document).ready(function () {
         //camera.position.y += 10 + ( - mouseY*2 - camera.position.y ) * .05;
         camera.position.x += (randomViewPos.x - camera.position.x) * .005;
         camera.position.y += (randomViewPos.y - camera.position.y) * .005;
-        oars.pivot_right.rotation.y = $lastRightRowRotation;// mouseY / 100 * Math.PI;
-        oars.pivot_left.rotation.y = $lastLeftRowRotation; //-mouseY / 100 * Math.PI;
+        oars.right.pivot.rotation.y = oars.right.lastRowRotation;// mouseY / 100 * Math.PI;
+        oars.left.pivot.rotation.y = oars.left.lastRowRotation; //-mouseY / 100 * Math.PI;
 
         // making rowing activity buffer:
         dirArray.push($lastRowValR);
@@ -414,8 +432,8 @@ jQuery(document).ready(function () {
             speed += (0 - speed) * .005; //= 0.01;//
         }
 
-        oars.pivot_right.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
-        oars.pivot_left.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
+        oars.right.pivot.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
+        oars.left.pivot.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
 
 
 
@@ -449,6 +467,7 @@ jQuery(document).ready(function () {
 
     }
 
+
     var socket = io.connect("/", {
         "reconnect": true,
         "reconnection delay": 500,
@@ -462,15 +481,15 @@ jQuery(document).ready(function () {
         var processedRowingData = process_data(rowingData);
 
         /* Initial position */
-        if ($lastRightRowRotation == -1) {
-            $lastRightRowRotation = processedRowingData.x;
-            $lastLeftRowRotation = processedRowingData.y;
+        if (oars.right.lastRowRotation == -1) {
+            oars.right.lastRowRotation = processedRowingData.x;
+            oars.left.lastRowRotation = processedRowingData.y;
 
         }
 
-        $lastRightRowRotation = processedRowingData.degreeR;
+        oars.right.lastRowRotation = processedRowingData.degreeR;
         //console.log($lastR);
-        $lastLeftRowRotation = processedRowingData.degreeL;
+        oars.left.lastRowRotation = processedRowingData.degreeL;
         // $lastRup = data.upR;
         // $lastLup = data.upL;
         $lastRowValR = processedRowingData.rawValR;
