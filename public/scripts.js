@@ -108,6 +108,12 @@ jQuery(document).ready(function () {
     var activityPeriods = [];
     var activity = false;
     var prevActiveStartTime;
+    var container;
+    var camera, scene, renderer;
+    //var mouseX = 0, mouseY = 0;
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+    var boat;
 
     function initStats() {
 
@@ -123,27 +129,6 @@ jQuery(document).ready(function () {
     }
 
     var stats = initStats();
-    var container;
-
-    var camera, scene, renderer;
-
-    //var mouseX = 0, mouseY = 0;
-
-    var windowHalfX = window.innerWidth / 2;
-    var windowHalfY = window.innerHeight / 2;
-    var boat = new THREE.Object3D();
-    boat.oars = oars;
-    boat.speed = 0;
-
-    boat.updateSpeed = function (timedelta) {
-        if (this.oars.dirFlag) { // direction of oars
-            this.speed += (this.oars.rowingIntensity * timedelta * speedAdjustMult - this.speed) * speedSmoothing; //= 0.08; //
-        }
-        else {
-            this.speed += (0 - this.speed) * .005; //= 0.01;//
-        }
-        // this.speed = speed;
-    }
 
 
     init();
@@ -203,26 +188,25 @@ jQuery(document).ready(function () {
     }
 
 
-    function init() {
+    function debugGeometry() {
+        var geometry = new THREE.PlaneGeometry(4, 4, 4);
+        // var geometry = new THREE.PlaneGeometry(100, 100, 4);
 
-        container = document.createElement("div");
-        document.body.appendChild(container);
+        var material = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
+        var plane = new THREE.Mesh(geometry, material);
+        plane.rotation.x = Math.PI / 2;
+        plane.position.z = 50;
+        plane.position.y = 20;
+        boat.add(plane);
+        var plane2 = new THREE.Mesh(geometry, material);
+        plane2.position.z = -50;
+        plane2.position.y = 20;
+        plane2.rotation.x = Math.PI / 2;
+        boat.add(plane2);
 
-        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-        camera.position.x = 0;
-        camera.position.y = 420;
-        camera.position.z = 420;
+    }
 
-        // scene
-
-        scene = new THREE.Scene();
-
-        var ambient = new THREE.AmbientLight(0x888888);
-        scene.add(ambient);
-
-        var directionalLight = new THREE.DirectionalLight(0xffeedd);
-        directionalLight.position.set(0, 5, 1).normalize();
-        scene.add(directionalLight);
+    function createSea() {
 
         var mapUrl = "texture/sea2.jpg";
         var map = THREE.ImageUtils.loadTexture(mapUrl);
@@ -238,29 +222,35 @@ jQuery(document).ready(function () {
 
             scene.add(plane);
         }
-        // model
+    }
 
-        setSkyBox();
 
+    function setUpLight() {
+
+        var ambient = new THREE.AmbientLight(0x888888);
+        scene.add(ambient);
+
+        var directionalLight = new THREE.DirectionalLight(0xffeedd);
+        directionalLight.position.set(0, 5, 1).normalize();
+        scene.add(directionalLight);
+    }
+
+    function cameraSetUp() {
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.x = 0;
+        camera.position.y = 420;
+        camera.position.z = 420;
+    }
+    function createBoat() {
+
+        boat = new THREE.Object3D();
+        boat.oars = oars;
+        boat.speed = 0;
         scene.add(boat);
 
-        /*        var geometry = new THREE.PlaneGeometry(4, 4, 4);
-                // var geometry = new THREE.PlaneGeometry(100, 100, 4);
-        
-                var material = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
-                var plane = new THREE.Mesh(geometry, material);
-                plane.rotation.x = Math.PI / 2;
-                plane.position.z = 50;
-                plane.position.y = 20;
-                boat.add(plane);
-                var plane2 = new THREE.Mesh(geometry, material);
-                plane2.position.z = -50;
-                plane2.position.y = 20;
-                plane2.rotation.x = Math.PI / 2;
-                boat.add(plane2);
-        */
         boat.add(oars.right.pivot);
         boat.add(oars.left.pivot);
+
         var onProgress = function (xhr) {
             if (xhr.lengthComputable) {
                 var percentComplete = xhr.loaded / xhr.total * 100;
@@ -302,7 +292,30 @@ jQuery(document).ready(function () {
         oars.right.pivot.position.x = 22.7;
         oars.left.pivot.position.z = 13.5;
         oars.left.pivot.position.x = -22.7;
+        boat.updateSpeed = function (timedelta) {
+            if (this.oars.dirFlag) { // direction of oars
+                this.speed += (this.oars.rowingIntensity * timedelta * speedAdjustMult - this.speed) * speedSmoothing; //= 0.08; //
+            }
+            else {
+                this.speed += (0 - this.speed) * .005; //= 0.01;//
+            }
+            // this.speed = speed;
+        }
+    }
 
+    function init() {
+
+        container = document.createElement("div");
+        document.body.appendChild(container);
+
+        cameraSetUp();
+        // scene
+        scene = new THREE.Scene();
+        setUpLight();
+        createSea();
+        setSkyBox();
+        // debugGeometry();
+        createBoat();
 
         scene.fog = new THREE.Fog(0xc3a8c5, 500, 670);//9c7b99
         renderer = new THREE.WebGLRenderer();
