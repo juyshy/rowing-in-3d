@@ -6,43 +6,58 @@
 
 jQuery(document).ready(function () {
 
-    var oarDefaults = { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 };
 
-    /*    var right.initialRowRotation = 45 * Math.PI / 180;
-        var left.initialRowRotation = -45 * Math.PI / 180;
-        var oars.right.lastRowRotation = right.initialRowRotation;
-        var oars.left.lastRowRotation = left.initialRowRotation;
-    */
-
+    var rowingMachine = {
+        oarDefaults: { leftMin: 65, rightMin: 147, leftMax: 676, rightMax: 752 }
+    }
     var oars = {
+        dirFlag: false,
         left: {
             pivot: new THREE.Object3D(),
             initialRowRotation: -45 * Math.PI / 180,
             lastRowRotation: this.lastRowRotation,
-            pos: new THREE.Vector3(22.7, 0, -13.5)
+            pos: new THREE.Vector3(22.7, 0, -13.5),
+            upRotation: 0
         },
         right: {
             pivot: new THREE.Object3D(),
             initialRowRotation: 45 * Math.PI / 180,
             lastRowRotation: this.initialRowRotation,
-            pos: new THREE.Vector3(-22.7, 0, -13.5)
+            pos: new THREE.Vector3(-22.7, 0, -13.5),
+            upRotation: 0
         },
+        setOarsUpDown: function () {
+            if (this.dirFlag) {
+                this.right.upRotation -= 0.01;
+                if (this.right.upRotation < -0.2) {
+                    this.right.upRotation = -0.2;
+                }
+                this.left.upRotation += 0.01;
+                if (this.left.upRotation > 0.2) {
+                    this.left.upRotation = 0.2;
+                }
+                // speed += (rowingIntensity * timedelta * speedAdjustMult - speed) * speedSmoothing; //= 0.08; 
+            } else {
 
+                this.right.upRotation += 0.01;
+                if (this.right.upRotation > 0) {
+                    this.right.upRotation = 0;
+                }
+                this.left.upRotation -= 0.01;
+                if (this.left.upRotation < 0) {
+                    this.left.upRotation = 0;
+                }
+            }
+
+        }
     };
-
-
-    // oars.right.lastRowRotation = oars.right.initialRowRotation
-
-    var $lastLup = 0;
-    var $lastRup = 0;
+    
     var speedAdjustMult = 1.0;
     var degreeL, degreeR;
-    //var $lastSpeed = 0;
+ 
     var $lastRowValR = -1;
     var $lastRowValL = -1;
-    //var maxim = 0;
-    //var previousAngle = 0;
-    var dirFlag = false;
+ 
     var dirArray = [];
     var speed = 0;
     var frameCount = 0;
@@ -188,7 +203,7 @@ jQuery(document).ready(function () {
         // model
 
         setSkyBox();
-        
+
         scene.add(boat);
 
         /*        var geometry = new THREE.PlaneGeometry(4, 4, 4);
@@ -394,10 +409,10 @@ jQuery(document).ready(function () {
 
         //determining oar direction 
         if (rowingIntensity > 0.03) {
-            dirFlag = true; // going forward
+            oars.dirFlag = true; // going forward
 
         } else {
-            dirFlag = false;
+            oars.dirFlag = false;
         }
 
         if (timedelta > 0.05) {
@@ -405,35 +420,20 @@ jQuery(document).ready(function () {
         }
         //  speed = speed * timedelta / 0.018;
 
-        if (dirFlag) { // direction of oars
-            // move oars to water:
-            $lastRup -= 0.01;
-            if ($lastRup < -0.2) {
-                $lastRup = -0.2;
-            }
-            $lastLup += 0.01;
-            if ($lastLup > 0.2) {
-                $lastLup = 0.2;
-            }
+        oars.setOarsUpDown();
+
+        if (oars.dirFlag) { // direction of oars
             speed += (rowingIntensity * timedelta * speedAdjustMult - speed) * speedSmoothing; //= 0.08; //
         }
         else {
             // $lastRup = 0;
             // $lastLup = 0;
 
-            $lastRup += 0.01;
-            if ($lastRup > 0) {
-                $lastRup = 0;
-            }
-            $lastLup -= 0.01;
-            if ($lastLup < 0) {
-                $lastLup = 0;
-            }
             speed += (0 - speed) * .005; //= 0.01;//
         }
 
-        oars.right.pivot.rotation.z = $lastRup;// mouseY / 100 * Math.PI;
-        oars.left.pivot.rotation.z = $lastLup; //-mouseY / 100 * Math.PI;
+        oars.right.pivot.rotation.z = oars.right.upRotation;// mouseY / 100 * Math.PI;
+        oars.left.pivot.rotation.z = oars.left.upRotation; //-mouseY / 100 * Math.PI;
 
 
 
@@ -536,10 +536,10 @@ jQuery(document).ready(function () {
             rawValL: 0,
         };
 
-        var max_potR = oarDefaults.rightMax;
-        var max_potL = oarDefaults.leftMax;
-        var min_potR = oarDefaults.rightMin;
-        var min_potL = oarDefaults.leftMin;
+        var max_potR = rowingMachine.oarDefaults.rightMax;
+        var max_potL = rowingMachine.oarDefaults.leftMax;
+        var min_potR = rowingMachine.oarDefaults.rightMin;
+        var min_potL = rowingMachine.oarDefaults.leftMin;
         var max_rota_R = 50;
         var max_rota_L = 50;
         var min_rota_R = -50;
